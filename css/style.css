@@ -908,6 +908,7 @@ img {
   max-width: 100%;
 }
 .article-date,
+.article-count-show-icon,
 .article-category .article-category-link,
 .archive-year-wrap .archive-year,
 .archive-article-date {
@@ -915,6 +916,7 @@ img {
   color: #5c6b72;
 }
 .article-date:hover,
+.article-count-show-icon:hover,
 .article-category .article-category-link:hover,
 .archive-year-wrap .archive-year:hover,
 .archive-article-date:hover {
@@ -1339,6 +1341,12 @@ img {
 }
 .article-date::before {
   content: '\f10f';
+  margin-right: 0.5rem;
+  font-family: feathericon;
+  opacity: 0.5;
+}
+.article-count-show-icon::before {
+  content: '\f109';
   margin-right: 0.5rem;
   font-family: feathericon;
   opacity: 0.5;
@@ -2339,9 +2347,12 @@ pre .javascript .function {
   content: '\f12a';
 }
 .navbar .nav.nav-main .nav-item:nth-child(3) .nav-item-link::before {
-  content: '\f1a9';
+  content: '\f18c';
 }
 .navbar .nav.nav-main .nav-item:nth-child(4) .nav-item-link::before {
+  content: '\f153';
+}
+.navbar .nav.nav-main .nav-item:nth-child(5) .nav-item-link::before {
   content: '\f174';
 }
 .navbar-bottom {
