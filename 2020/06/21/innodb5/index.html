@@ -467,28 +467,12 @@
 		serverURL: "https://7o0vmvny.lc-cn-n1-shared.com"
 	});
 
-	function createRecord(Counter, uuid, title) {
-		var newCounter = new Counter();
-		newCounter.set("title", title);
-		newCounter.set("uuid", uuid);
-		newCounter.set("times", 0);
-		newCounter.save(null, {
-			success: function (newCounter) {
-				console.log("create a new counter: title: " + title + ", uuid: " + uuid)
-				var content = $(document.getElementById(uuid)).text() + ": " + newCounter.get("times");
-				$(document.getElementById(uuid).text(content));
-			},
-			error: function (error) {
-				console.log("failed to create new counter: title: " + title + ", uuid: " + uuid);
-			}
-		})
-	}
-
 	function showCount(CounterName) {
 		var Counter = AV.Object.extend(CounterName);
 		var query = new AV.Query(Counter);
 		var uuid_list = [];
 		var uuid_to_url = {};
+		var query_result = {};
 		$(".article-count-show").each(function () {
 			var uuid = $(this).attr("uuid").trim();
 			var url = $(this).attr("id").trim();
@@ -502,6 +486,7 @@
 					var uuid = results[i].get("uuid");
 					var times = results[i].get("times")
 					var url = uuid_to_url[uuid]
+					query_result[uuid] = results[i]
 					uuid_to_url[uuid] = ""
 					var content = $(document.getElementById(url)).text() + times;
 					$(document.getElementById(url)).text(content);
@@ -518,52 +503,42 @@
 		for (var uuid in uuid_to_url) {
 			var url = uuid_to_url[uuid]
 			if (url !== "") {
-				console.log("not found counter: "+uuid+" "+url)
+				console.log("not found counter: " + uuid + " " + url)
 				var content = $(document.getElementById(url)).text() + "0";
 				$(document.getElementById(url)).text(content);
 			}
 		}
+		return query_result
 	}
 
-	function addOneCount(CounterName, classname) {
-		var Counter = AV.Object.extend(CounterName);
+	function planToAdd(classname, query_results) {
 		var uuid = $(classname).attr('uuid').trim();
 		var url = $(classname).attr("id").trim();
 		var title = $(classname).attr('data-flag-title').trim();
-		console.log("query " + uuid)
-		var query = new AV.Query(Counter);
-		query.equalTo("uuid", uuid);
-		query.find({
-			success: function (results) {
-				if (results.length > 0) {
-					var counter = results[0];
-					counter.fetchWhenSave(true);
-					counter.increment("times");
-					counter.save(null, {
-						success: function () {
-							console.log("add time for uuid: " + uuid + ", title: " + title);
-						},
-						error: function (error) {
-							console.log('Failed to save reader num, with error message: ' + error.message);
-						}
-					});
-				} else {
-					console.log("create " + uuid)
-					createRecord(Counter, uuid, title);
-				}
-			},
-			error: function (error) {
-				console.log('Error:' + error.code + " " + error.message);
-			}
-		});
+		var result = [];
+		if (query_results.has(uuid)) {
+			var object = query_results[uuid]
+			object.increment("times")
+			result.push(object)
+		} else {
+			var newCounter = new Counter();
+			newCounter.set("title", title);
+			newCounter.set("uuid", uuid);
+			newCounter.set("times", 0);
+			result.push(newCounter)
+		}
+		return result;
 	}
 
-	function addPostCount(CounterName) {
+	function addPostCount(query_results) {
 		var uuid = $(".article-count-do").attr('uuid').trim();
+		result = []
 		if (checkHostKey(uuid)) {
-			addOneCount(CounterName, ".article-count-do");
-			addOneCount(CounterName, ".total-read-count-do");
+			result = result.concat(
+				planToAdd(".article-count-do", query_results),
+				planToAdd(".total-read-count-do", query_results));
 		}
+		return result;
 	}
 
 	function setCookie(key, value) {
@@ -589,18 +564,34 @@
 
 	$(function () {
 		if ($('.article-count-show').length > 0) {
-			showCount("ReadCounter");
-		}
-		if ($('.article-count-do').length == 1) {
-			addPostCount("ReadCounter");
-		}
-		if ($('.total-visit-count-do').length == 1) {
-			if (checkHostKey("total-visit")) {
-				addOneCount("ReadCounter", '.total-visit-count-do');
+			var query_results = showCount("ReadCounter");
+			var changed_objects = []
+			if ($('.article-count-do').length == 1) {
+				changed_objects = changed_objects.concat(addPostCount("ReadCounter", query_results));
 			}
+			if ($('.total-visit-count-do').length == 1) {
+				if (checkHostKey("total-visit")) {
+					changed_objects = changed_objects.concat(planToAdd('.total-visit-count-do', query_results));
+				}
+			}
+			AV.Object.saveAll(changed_objects).then(
+				function (savedObjects) {
+					for(var i = 0;i < savedObjects.length; i ++) {
+						console.log("save successfully: " + savedObjects[i].get("uuid"))
+					}
+					// 成功保存所有对象时进入此 resolve 函数，savedObjects 是包含所有 AV.Object 的数组
+				},
+				function (error) {
+					console.log("save error "+ error)
+					// 只要有一个对象保存错误就会进入此 reject 函数
+				}
+			);
 		}
 	});
-</script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+</script>
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
 </script>
@@ -617,8 +608,5 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js">
 </script>
 <!-- End: Injected MathJax -->
-<!-- hexo-inject:end -->
-
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+<!-- hexo-inject:end --></body>
 </html>
