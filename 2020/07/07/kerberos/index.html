@@ -319,10 +319,10 @@
 		query.find({
 			success: function (results) {
 				for (var i = 0; i < results.length; i++) {
-					var object = results[i];
-					var url = uuid_to_url[object.get("uuid")]
-					uuid_to_url = ""
-					var content = $(document.getElementById(url)).text() + object.get('times');
+					var uuid = results[i].get("uuid");
+					var url = uuid_to_url[uuid]
+					uuid_to_url[uuid] = ""
+					var content = $(document.getElementById(url)).text() + results[i].get('times');
 					$(document.getElementById(url)).text(content);
 				}
 			},
