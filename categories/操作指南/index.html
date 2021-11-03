@@ -354,6 +354,9 @@
 	}
 
 	$(function () {
+		if ($('.article-count-show').length > 0) {
+			showCount("ReadCounter");
+		}
 		if ($('.article-count-do').length == 1) {
 			addPostCount("ReadCounter");
 		}
@@ -361,9 +364,6 @@
 			if (checkHostKey("total-visit")) {
 				addOneCount("ReadCounter", '.total-visit-count-do');
 			}
-		}
-		if ($('.article-count-show').length > 0) {
-			showCount("ReadCounter");
 		}
 	});
 </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
