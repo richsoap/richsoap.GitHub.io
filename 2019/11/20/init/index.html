@@ -314,8 +314,7 @@
 			uuid_to_url[uuid] = url
 		});
 		query.containedIn('uuid', uuid_list);
-		query.find({
-			success: function (results) {
+		query.find.then((results)=>{
 				for (var i = 0; i < results.length; i++) {
 					var uuid = results[i].get("uuid");
 					var times = results[i].get("times")
@@ -326,13 +325,8 @@
 					$(document.getElementById(url)).text(content);
 					console.log("Get counter: " + uuid + " " + times);
 				}
-			},
-			error: function (object, error) {
-				var content = $(document.getElementById(url)).text() + '0';
-				$(document.getElementById(url)).text(content);
-				console.log("Error: " + error.code + " " + error.message);
 			}
-		});
+		);
 		// 处理找不到的counter
 		for (var uuid in uuid_to_url) {
 			var url = uuid_to_url[uuid]
@@ -423,10 +417,7 @@
 			);
 		}
 	});
-</script>
-
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+</script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
 </script>
@@ -443,5 +434,8 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js">
 </script>
 <!-- End: Injected MathJax -->
-<!-- hexo-inject:end --></body>
+<!-- hexo-inject:end -->
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
 </html>
