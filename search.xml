@@ -54,7 +54,7 @@
   <entry>
     <title>Devops搭建记录--Gitlab配置</title>
     <url>/2021/10/11/devops2/</url>
-    <content><![CDATA[<h1 id="Devops搭建记录—gitlab"><a href="#Devops搭建记录—gitlab" class="headerlink" title="Devops搭建记录—gitlab"></a>Devops搭建记录—gitlab</h1><p>现在各个服务都起来了，可以开始配置gitlab和CI/CD了</p>
+    <content><![CDATA[<h1 id="Devops搭建记录—gitlab"><a href="#Devops搭建记录—gitlab" class="headerlink" title="Devops搭建记录—gitlab"></a>Devops搭建记录—gitlab</h1><p>现在各个服务都起来了，可以开始配置gitlab和CI/CD了<br><a id="more"></a></p>
 <h2 id="gitlab本身"><a href="#gitlab本身" class="headerlink" title="gitlab本身"></a>gitlab本身</h2><p>主要就配一个gitlab.rb中的extern_url和ssh_port即可，没啥特别好说的</p>
 <h2 id="ci-cd"><a href="#ci-cd" class="headerlink" title="ci/cd"></a>ci/cd</h2><h3 id="需要准备的内容"><a href="#需要准备的内容" class="headerlink" title="需要准备的内容"></a>需要准备的内容</h3><ul>
 <li>DNS: 镜像管理需要放在内部的docker-registry中，所以需要配置一下DNS</li>
