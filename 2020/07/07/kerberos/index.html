@@ -407,12 +407,13 @@
 
 	$(function () {
 		if ($('.article-count-show').length > 0) {
+			console.log("called!")
 			var query_results = showCount("ReadCounter");
 			var changed_objects = []
-			if ($('.article-count-do').length == 1) {
+			if ($('.article-count-do').length > 0) {
 				changed_objects = changed_objects.concat(addPostCount("ReadCounter", query_results));
 			}
-			if ($('.total-visit-count-do').length == 1) {
+			if ($('.total-visit-count-do').length > 0) {
 				if (checkHostKey("total-visit")) {
 					changed_objects = changed_objects.concat(planToAdd('.total-visit-count-do', query_results));
 				}
