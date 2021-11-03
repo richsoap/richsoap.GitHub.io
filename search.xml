@@ -1,57 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Devops搭建记录--es和prometheus</title>
-    <url>/2021/11/03/devops4/</url>
-    <content><![CDATA[<p>为了更好地调试和迭代，顺便搭一个es和prometheus好了</p>
-<a id="more"></a>
-<h2 id="Prometheus-Grafana"><a href="#Prometheus-Grafana" class="headerlink" title="Prometheus+Grafana"></a>Prometheus+Grafana</h2><h3 id="node-exporter"><a href="#node-exporter" class="headerlink" title="node-exporter"></a>node-exporter</h3><p>在宿主机上起一个node-exporter，记得把宿主机的proc之类的目录挂载进去就行</p>
-<h3 id="Prometheus-Grafana-1"><a href="#Prometheus-Grafana-1" class="headerlink" title="Prometheus+Grafana"></a>Prometheus+Grafana</h3><p>按照教程走，没啥好说的，没有遇到任何问题</p>
-<h2 id="Fluentd-ES-Kibana"><a href="#Fluentd-ES-Kibana" class="headerlink" title="Fluentd+ES+Kibana"></a>Fluentd+ES+Kibana</h2><h3 id="Fluentd"><a href="#Fluentd" class="headerlink" title="Fluentd"></a>Fluentd</h3><p>需要注意的点有三个</p>
-<h4 id="配置目录"><a href="#配置目录" class="headerlink" title="配置目录"></a>配置目录</h4><p>运行之后，查看日志，确定配置文件位置，别看其他那些破日志</p>
-<h4 id="权限"><a href="#权限" class="headerlink" title="权限"></a>权限</h4><p>由于需要把docker日志挂进去，需要用到securityContext，而且，fluentd会强制使用1001的uid和文件系统交互，所以直接设置runAsUser=0是不行的</p>
-<h4 id="自定义镜像"><a href="#自定义镜像" class="headerlink" title="自定义镜像"></a>自定义镜像</h4><p>官方的Fluentd要啥插件没啥插件，需要自己打一下镜像，把需要的插件都装进去</p>
-<h3 id="ES"><a href="#ES" class="headerlink" title="ES"></a>ES</h3><h4 id="集群选主"><a href="#集群选主" class="headerlink" title="集群选主"></a>集群选主</h4><p>由于是单节点部署，所以需要预设master节点，节点名称通过对应的环境变量设置</p>
-<h3 id="kibana"><a href="#kibana" class="headerlink" title="kibana"></a>kibana</h3><p>就一纯前端，毫无难度</p>
-<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><p><a href="https://blog.csdn.net/liuchao666888/article/details/108625208" target="_blank" rel="noopener">K8S部署(Elasticsearch+Kibana+Fluentd)_liuchao666888的博客-CSDN博客</a><br><a href="https://blog.csdn.net/lypgcs/article/details/104326585" target="_blank" rel="noopener">制作带有kafka插件和es插件的fluentd镜像_lypgcs的博客-CSDN博客</a></p>
-]]></content>
-      <categories>
-        <category>devops</category>
-      </categories>
-      <tags>
-        <tag>devops</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Devops搭建记录--Kubectl多用户</title>
-    <url>/2021/10/13/devops3/</url>
-    <content><![CDATA[<h1 id="Devops搭建记录—Kubectl多用户"><a href="#Devops搭建记录—Kubectl多用户" class="headerlink" title="Devops搭建记录—Kubectl多用户"></a>Devops搭建记录—Kubectl多用户</h1><p>学弟们也想用minikube跑东西，那就用起来呗（为什么没有学妹呢？好气哦</p>
-<a id="more"></a>
-<h2 id="计划"><a href="#计划" class="headerlink" title="计划"></a>计划</h2><ol>
-<li>创建命名空间</li>
-<li>创建账户</li>
-<li>赋予权限</li>
-<li>创建并使用新context</li>
-</ol>
-<h2 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create ns playground</span><br></pre></td></tr></table></figure>
-<h2 id="创建账户"><a href="#创建账户" class="headerlink" title="创建账户"></a>创建账户</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create sa -n playground player</span><br></pre></td></tr></table></figure>
-<h2 id="赋予权限"><a href="#赋予权限" class="headerlink" title="赋予权限"></a>赋予权限</h2><p>k8s自带一个admin的role还是很好使的，直接绑定即可<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create rolebinding playground-admin --clusterrole=admin --serviceaccount=playground:player --namespace=playground</span><br></pre></td></tr></table></figure><br>kubectl create rolebinding devops-cluster-admin —clusterrole=cluster-admin —serviceaccount=devops:default —namespace=devops</p>
-<h2 id="创建Context"><a href="#创建Context" class="headerlink" title="创建Context"></a>创建Context</h2><h3 id="获取secret名称"><a href="#获取secret名称" class="headerlink" title="获取secret名称"></a>获取secret名称</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl describe sa -n playground player | grep Token</span><br></pre></td></tr></table></figure>
-<p>会得到如下所示的结果，即为Secret的名称<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Tokens:              player-token-abcdefg</span><br></pre></td></tr></table></figure></p>
-<h3 id="获取Token"><a href="#获取Token" class="headerlink" title="获取Token"></a>获取Token</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl describe secret -n playground &lt;SECRET_NAME&gt;</span><br></pre></td></tr></table></figure>
-<p>结果如下<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Name:         player-token-abcdefg</span><br><span class="line">Namespace:    playground</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  kubernetes.io/service-account.name: player</span><br><span class="line">              kubernetes.io/service-account.uid: ccfc6b21-5b2d-450b-a343-744f815ab175</span><br><span class="line"></span><br><span class="line">Type:  kubernetes.io/service-account-token</span><br><span class="line"></span><br><span class="line">Data</span><br><span class="line">====</span><br><span class="line">ca.crt:     1111 bytes</span><br><span class="line">namespace:  10 bytes</span><br><span class="line">token:      &lt;TOKEN&gt;</span><br></pre></td></tr></table></figure></p>
-<h3 id="添加用户配置"><a href="#添加用户配置" class="headerlink" title="添加用户配置"></a>添加用户配置</h3><p>在kubectl的config中，以该Token增加用户即可<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config set-credentials player --namespace=playground --token=&lt;TOKEN&gt;</span><br></pre></td></tr></table></figure></p>
-<h3 id="添加Context配置"><a href="#添加Context配置" class="headerlink" title="添加Context配置"></a>添加Context配置</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config set-context player --user=player --cluster=&lt;API_SERVER&gt; --namespace=playground</span><br></pre></td></tr></table></figure>
-<h3 id="使用新context"><a href="#使用新context" class="headerlink" title="使用新context"></a>使用新context</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config use-context player</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>devops</category>
-      </categories>
-      <tags>
-        <tag>devops</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Devops搭建记录--Gitlab配置</title>
     <url>/2021/10/11/devops2/</url>
     <content><![CDATA[<h1 id="Devops搭建记录—gitlab"><a href="#Devops搭建记录—gitlab" class="headerlink" title="Devops搭建记录—gitlab"></a>Devops搭建记录—gitlab</h1><p>现在各个服务都起来了，可以开始配置gitlab和CI/CD了<br><a id="more"></a></p>
@@ -76,6 +25,51 @@
 <li>[runners.docker]volumes=[“/var/run/docker.sock”] # 否则在CD里不能正确连上宿主机的Docker</li>
 <li>[runners.docker]pull_policy = “if-not-present”</li>
 </ul>
+]]></content>
+      <categories>
+        <category>devops</category>
+      </categories>
+      <tags>
+        <tag>devops</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>字节AILAB招人</title>
+    <url>/2020/09/11/Recruitment/</url>
+    <content><![CDATA[<p>字节跳动AI-LAB语音组招人了，摸鱼侠推荐投递以下几个职位</p>
+<p>P.S 在你看到的时候可能只有很少几个，会慢慢增加的</p>
+<a id="more"></a>
+<h1 id="语音系统实习生"><a href="#语音系统实习生" class="headerlink" title="语音系统实习生"></a>语音系统实习生</h1><p>职位描述如下图<br><img src="https://githubphoto.oss-cn-beijing.aliyuncs.com/img/20200911203425.png" alt="职位描述图"></p>
+<h3 id="投递链接"><a href="#投递链接" class="headerlink" title="投递链接"></a><a href="https://job.toutiao.com/s/JSRNvB5" target="_blank" rel="noopener">投递链接</a></h3><h2 id="个人的想法"><a href="#个人的想法" class="headerlink" title="个人的想法"></a>个人的想法</h2><p>对技能的要求不是特别高，不是说需要刷很多题才OK，可以先投一个试试，谁会和毛爷爷过意不去呢？以及，对上班地点没有限制，哪怕实习全过程连公司都没有来过也是可以的。</p>
+]]></content>
+      <categories>
+        <category>jobs</category>
+      </categories>
+      <tags>
+        <tag>AI-LAB</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Devops搭建记录--Kubectl多用户</title>
+    <url>/2021/10/13/devops3/</url>
+    <content><![CDATA[<h1 id="Devops搭建记录—Kubectl多用户"><a href="#Devops搭建记录—Kubectl多用户" class="headerlink" title="Devops搭建记录—Kubectl多用户"></a>Devops搭建记录—Kubectl多用户</h1><p>学弟们也想用minikube跑东西，那就用起来呗（为什么没有学妹呢？好气哦</p>
+<a id="more"></a>
+<h2 id="计划"><a href="#计划" class="headerlink" title="计划"></a>计划</h2><ol>
+<li>创建命名空间</li>
+<li>创建账户</li>
+<li>赋予权限</li>
+<li>创建并使用新context</li>
+</ol>
+<h2 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create ns playground</span><br></pre></td></tr></table></figure>
+<h2 id="创建账户"><a href="#创建账户" class="headerlink" title="创建账户"></a>创建账户</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create sa -n playground player</span><br></pre></td></tr></table></figure>
+<h2 id="赋予权限"><a href="#赋予权限" class="headerlink" title="赋予权限"></a>赋予权限</h2><p>k8s自带一个admin的role还是很好使的，直接绑定即可<br><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create rolebinding playground-admin --clusterrole=admin --serviceaccount=playground:player --namespace=playground</span><br></pre></td></tr></table></figure><br>kubectl create rolebinding devops-cluster-admin —clusterrole=cluster-admin —serviceaccount=devops:default —namespace=devops</p>
+<h2 id="创建Context"><a href="#创建Context" class="headerlink" title="创建Context"></a>创建Context</h2><h3 id="获取secret名称"><a href="#获取secret名称" class="headerlink" title="获取secret名称"></a>获取secret名称</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl describe sa -n playground player | grep Token</span><br></pre></td></tr></table></figure>
+<p>会得到如下所示的结果，即为Secret的名称<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Tokens:              player-token-abcdefg</span><br></pre></td></tr></table></figure></p>
+<h3 id="获取Token"><a href="#获取Token" class="headerlink" title="获取Token"></a>获取Token</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl describe secret -n playground &lt;SECRET_NAME&gt;</span><br></pre></td></tr></table></figure>
+<p>结果如下<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Name:         player-token-abcdefg</span><br><span class="line">Namespace:    playground</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  kubernetes.io/service-account.name: player</span><br><span class="line">              kubernetes.io/service-account.uid: ccfc6b21-5b2d-450b-a343-744f815ab175</span><br><span class="line"></span><br><span class="line">Type:  kubernetes.io/service-account-token</span><br><span class="line"></span><br><span class="line">Data</span><br><span class="line">====</span><br><span class="line">ca.crt:     1111 bytes</span><br><span class="line">namespace:  10 bytes</span><br><span class="line">token:      &lt;TOKEN&gt;</span><br></pre></td></tr></table></figure></p>
+<h3 id="添加用户配置"><a href="#添加用户配置" class="headerlink" title="添加用户配置"></a>添加用户配置</h3><p>在kubectl的config中，以该Token增加用户即可<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config set-credentials player --namespace=playground --token=&lt;TOKEN&gt;</span><br></pre></td></tr></table></figure></p>
+<h3 id="添加Context配置"><a href="#添加Context配置" class="headerlink" title="添加Context配置"></a>添加Context配置</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config set-context player --user=player --cluster=&lt;API_SERVER&gt; --namespace=playground</span><br></pre></td></tr></table></figure>
+<h3 id="使用新context"><a href="#使用新context" class="headerlink" title="使用新context"></a>使用新context</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kubectl config use-context player</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>devops</category>
@@ -125,22 +119,6 @@
       </categories>
       <tags>
         <tag>devops</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>字节AILAB招人</title>
-    <url>/2020/09/11/Recruitment/</url>
-    <content><![CDATA[<p>字节跳动AI-LAB语音组招人了，摸鱼侠推荐投递以下几个职位</p>
-<p>P.S 在你看到的时候可能只有很少几个，会慢慢增加的</p>
-<a id="more"></a>
-<h1 id="语音系统实习生"><a href="#语音系统实习生" class="headerlink" title="语音系统实习生"></a>语音系统实习生</h1><p>职位描述如下图<br><img src="https://githubphoto.oss-cn-beijing.aliyuncs.com/img/20200911203425.png" alt="职位描述图"></p>
-<h3 id="投递链接"><a href="#投递链接" class="headerlink" title="投递链接"></a><a href="https://job.toutiao.com/s/JSRNvB5" target="_blank" rel="noopener">投递链接</a></h3><h2 id="个人的想法"><a href="#个人的想法" class="headerlink" title="个人的想法"></a>个人的想法</h2><p>对技能的要求不是特别高，不是说需要刷很多题才OK，可以先投一个试试，谁会和毛爷爷过意不去呢？以及，对上班地点没有限制，哪怕实习全过程连公司都没有来过也是可以的。</p>
-]]></content>
-      <categories>
-        <category>jobs</category>
-      </categories>
-      <tags>
-        <tag>AI-LAB</tag>
       </tags>
   </entry>
   <entry>
@@ -200,166 +178,356 @@
       </tags>
   </entry>
   <entry>
-    <title>kerberos</title>
-    <url>/2020/07/07/kerberos/</url>
-    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于某些原因，需要使用kerberos登录服务器，但由于VScode没有原生支持，所以在这个地方写一下解决方法。</p>
+    <title>Devops搭建记录--es和prometheus</title>
+    <url>/2021/11/03/devops4/</url>
+    <content><![CDATA[<p>为了更好地调试和迭代，顺便搭一个es和prometheus好了</p>
 <a id="more"></a>
-<h2 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h2><ol>
-<li>安装Kerberos等软件，按照要求进行配置</li>
-<li>安装PuTTY</li>
-<li>在PuTTY中设置一个名为remote的session，需要包括以下内容<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">Session-&gt;</span><span class="bash">Host Name</span></span><br><span class="line"><span class="meta">Connection-&gt;</span><span class="bash">SSH-&gt;Auth-&gt;GSSAPI</span></span><br><span class="line"><span class="meta">Connection-&gt;</span><span class="bash">Data</span></span><br></pre></td></tr></table></figure></li>
-<li>编写C:/Users/<name>/ssh.bat脚本<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo OpenSSH</span><br><span class="line">SET mypath=%~dp0</span><br><span class="line">powershell %mypath%ssh.ps1</span><br></pre></td></tr></table></figure></li>
-<li>同目录下编写脚本ssh.ps1<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash">ArgArray = [System.Collections.ArrayList]<span class="variable">$Args</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash">ind = <span class="variable">$ArgArray</span>.IndexOf(<span class="string">"-F"</span>)</span></span><br><span class="line">if ($ind -ge 0) &#123;</span><br><span class="line">    $ArgArray.RemoveAt($ind)</span><br><span class="line">    $ArgArray.RemoveAt($ind)</span><br><span class="line">&#125;</span><br><span class="line">Write-Host $ArgArray</span><br><span class="line">&amp; 'C:\Program Files\PuTTY\plink.exe' $ArgArray</span><br></pre></td></tr></table></figure></li>
-<li>修改vscode中的”remote.SSH.path”值，将其改为ssh.bat的路径</li>
-<li>在ssh配置中添加以下内容<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host remote #上文中名为remote的配置</span><br><span class="line">    HostName remote</span><br><span class="line">    User XXXX</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
+<h2 id="Prometheus-Grafana"><a href="#Prometheus-Grafana" class="headerlink" title="Prometheus+Grafana"></a>Prometheus+Grafana</h2><h3 id="node-exporter"><a href="#node-exporter" class="headerlink" title="node-exporter"></a>node-exporter</h3><p>在宿主机上起一个node-exporter，记得把宿主机的proc之类的目录挂载进去就行</p>
+<h3 id="Prometheus-Grafana-1"><a href="#Prometheus-Grafana-1" class="headerlink" title="Prometheus+Grafana"></a>Prometheus+Grafana</h3><p>按照教程走，没啥好说的，没有遇到任何问题</p>
+<h2 id="Fluentd-ES-Kibana"><a href="#Fluentd-ES-Kibana" class="headerlink" title="Fluentd+ES+Kibana"></a>Fluentd+ES+Kibana</h2><h3 id="Fluentd"><a href="#Fluentd" class="headerlink" title="Fluentd"></a>Fluentd</h3><p>需要注意的点有三个</p>
+<h4 id="配置目录"><a href="#配置目录" class="headerlink" title="配置目录"></a>配置目录</h4><p>运行之后，查看日志，确定配置文件位置，别看其他那些破日志</p>
+<h4 id="权限"><a href="#权限" class="headerlink" title="权限"></a>权限</h4><p>由于需要把docker日志挂进去，需要用到securityContext，而且，fluentd会强制使用1001的uid和文件系统交互，所以直接设置runAsUser=0是不行的</p>
+<h4 id="自定义镜像"><a href="#自定义镜像" class="headerlink" title="自定义镜像"></a>自定义镜像</h4><p>官方的Fluentd要啥插件没啥插件，需要自己打一下镜像，把需要的插件都装进去</p>
+<h3 id="ES"><a href="#ES" class="headerlink" title="ES"></a>ES</h3><h4 id="集群选主"><a href="#集群选主" class="headerlink" title="集群选主"></a>集群选主</h4><p>由于是单节点部署，所以需要预设master节点，节点名称通过对应的环境变量设置</p>
+<h3 id="kibana"><a href="#kibana" class="headerlink" title="kibana"></a>kibana</h3><p>就一纯前端，毫无难度</p>
+<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><p><a href="https://blog.csdn.net/liuchao666888/article/details/108625208" target="_blank" rel="noopener">K8S部署(Elasticsearch+Kibana+Fluentd)_liuchao666888的博客-CSDN博客</a><br><a href="https://blog.csdn.net/lypgcs/article/details/104326585" target="_blank" rel="noopener">制作带有kafka插件和es插件的fluentd镜像_lypgcs的博客-CSDN博客</a></p>
 ]]></content>
       <categories>
-        <category>操作指南</category>
+        <category>devops</category>
       </categories>
       <tags>
-        <tag>ssh</tag>
-        <tag>vscode</tag>
-        <tag>kerberos</tag>
+        <tag>devops</tag>
       </tags>
   </entry>
   <entry>
-    <title>VR电影中的镜头与音响</title>
-    <url>/2020/07/01/vrmovie/</url>
-    <content><![CDATA[<p>小学妹选了个VR课，oculus都没有就选这样的课也是心大，用手机看了几个VR视频，帮她处理一下观后感作业中有关运镜和音响的部分好了。</p>
+    <title>枪炮，病菌和钢铁</title>
+    <url>/2019/12/06/guns_germs_and_steel/</url>
+    <content><![CDATA[<p>小学妹论文的读书笔记</p>
 <a id="more"></a>
-<h2 id="电影"><a href="#电影" class="headerlink" title="电影"></a>电影</h2><p>戛纳XR x VeeR 360VR沉浸影像展：秘密怪兽</p>
-<h2 id="镜头"><a href="#镜头" class="headerlink" title="镜头"></a>镜头</h2><h3 id="观众的视角"><a href="#观众的视角" class="headerlink" title="观众的视角"></a>观众的视角</h3><p>VR视频中，观众的视角是可以随意转动的，但观众的位置是不变的，这也就使得固定位置的第三人称旁观者视角可能是观众视角的最好选择。参照游戏中的视角定义，可选视角有第一人称视角，越肩视角和旁观者视角。其中，由于观众视角的可转动性，第一人称视角的效果起伏非常大，当观众按照预设的视角观赏影片可获得非常好的沉浸式体验，但如果观众选择自由发挥，效果将大打折扣，所以要做出适合第一人称视角的VR难度非常大；越肩视角要求摄像机“漂浮”于主角后方，算是第一人称视角的延申，存在全程都在看主角背影，难以介入剧情矛盾的问题；旁观者视角，旁观者视角具有容易布置，能够较好地表达叙述逻辑等优点，正确地放置可以获得不错的沉浸体验，对于不需要互动的VR视频来说非常适合。</p>
-<h3 id="兴趣点的转移"><a href="#兴趣点的转移" class="headerlink" title="兴趣点的转移"></a>兴趣点的转移</h3><p>兴趣点的选择与传统视频制作类似，同样聚焦于互动双方，变化的元素。例如，怪兽与人类互动时，兴趣点位于蜷缩与逃跑的人类，但同时也将怪兽的反应收于背景中；当两只怪兽争吵时，视角则位于两个怪兽之间的胸口高度，让观众能够以弱小的旁观者的角度介入到剧情中，效果很好。</p>
-<h3 id="场景，机位，镜头"><a href="#场景，机位，镜头" class="headerlink" title="场景，机位，镜头"></a>场景，机位，镜头</h3><p>视频主角是绿色怪兽，场景的选择也以表现怪兽的生活为主。具体场景包括，欺负人类，发现入侵者，反抗入侵者，反抗失败，表现出怪兽生活从快乐，到惊恐，到生气，到沮丧的整个变化过程。</p>
-<p>由于观众均以旁观者的身份参与到剧情中，所以基于片中人类的活动选择机位能够增强带入感，便于观众理解剧情，例如，拆大楼时的楼内机位，空袭时的高空机位，打架时的街边机位等。</p>
-<p>由于VR视频的特殊性，只能以恒定焦距运镜，不存在特写和远景切换的叙述方式。此外，为顾及观众视觉和空间感的矛盾，片中使用的基本都是固定机位，基本不存在移动和旋转的情况，这也就使得《鸟人》或《地心引力》这样的长镜头叙事技巧派不上用场，故事推进时只能用切换机位的方式跟上主角的行为，镜头叙事的连贯性有所不足。</p>
-<h2 id="音响"><a href="#音响" class="headerlink" title="音响"></a>音响</h2><h3 id="音乐和音响"><a href="#音乐和音响" class="headerlink" title="音乐和音响"></a>音乐和音响</h3><p>VR视频中的音乐的作用与常规视频中相同，均起到烘托氛围的效果。<br>VR视频中的音响分为不可追溯声源的旁白与来自演出环境中的音效。其中，旁白与音乐类似，与普通视频相比无需特殊处理。但由于观众是可以随意改变视角的，所以为提升沉浸感，影片应当能够依据用户的视角变换分别改变左右声道的声音大小与特效，给予观众正确的声音反馈。</p>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>VR</tag>
-        <tag>Movie</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>剑指Offer-其他能力</title>
-    <url>/2020/06/23/offer4/</url>
-    <content><![CDATA[<p>其他不会系统考察但十分重要的能力</p>
-<a id="more"></a>
-<h2 id="沟通能力"><a href="#沟通能力" class="headerlink" title="沟通能力"></a>沟通能力</h2><ul>
-<li>沟通不是夸夸其谈</li>
-<li>不能不懂装懂</li>
-<li>可能涉及外语沟通</li>
-</ul>
-<h2 id="学习能力"><a href="#学习能力" class="headerlink" title="学习能力"></a>学习能力</h2><ul>
-<li>询问最近在学什么，做什么</li>
-<li>抛出一个新概念，现场写代码</li>
-</ul>
-<h2 id="善于提问"><a href="#善于提问" class="headerlink" title="善于提问"></a>善于提问</h2><ul>
-<li>有不理解的地方，及时提出，有的题目就是故意模棱两可的</li>
-</ul>
-<h2 id="知识迁移能力"><a href="#知识迁移能力" class="headerlink" title="知识迁移能力"></a>知识迁移能力</h2><ul>
-<li>类的思想</li>
-<li>GC的原理</li>
-</ul>
-<h2 id="抽象建模能力"><a href="#抽象建模能力" class="headerlink" title="抽象建模能力"></a>抽象建模能力</h2><ol>
-<li>选择合适的数据结构表述问题</li>
-<li>分析规律</li>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>什么是聪明<br>聪明是适者生存在不同条件下的反应</p>
+<h2 id="全书结构"><a href="#全书结构" class="headerlink" title="全书结构"></a>全书结构</h2><h3 id="起源"><a href="#起源" class="headerlink" title="起源"></a>起源</h3><ol>
+<li>人类进化与旅行</li>
+<li>岛屿环境的影响</li>
+<li>同时代目击者的描述</li>
 </ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>剑指Offer</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>剑指Offer-代码质量，问题分析，优化</title>
-    <url>/2020/06/23/offer3/</url>
-    <content><![CDATA[<ul>
-<li>好看的结构，明确的命名，以及异常处理</li>
-<li>画图，举例，分解</li>
-<li>空间优化，时间优化</li>
-</ul>
-<a id="more"></a>
-<h2 id="代码质量"><a href="#代码质量" class="headerlink" title="代码质量"></a>代码质量</h2><h3 id="完整性"><a href="#完整性" class="headerlink" title="完整性"></a>完整性</h3><ol>
-<li>功能测试</li>
-<li>边界测试</li>
-<li>负面测试</li>
+<h3 id="粮食"><a href="#粮食" class="headerlink" title="粮食"></a>粮食</h3><ol>
+<li>农业类型</li>
+<li>农业发展方式</li>
 </ol>
-<h3 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h3><ol>
-<li>使用返回值告知执行结果</li>
-<li>全局变量</li>
-<li>抛出异常</li>
+<h3 id="疾病"><a href="#疾病" class="headerlink" title="疾病"></a>疾病</h3><h3 id="战争"><a href="#战争" class="headerlink" title="战争"></a>战争</h3><h2 id="波利尼西亚群岛"><a href="#波利尼西亚群岛" class="headerlink" title="波利尼西亚群岛"></a>波利尼西亚群岛</h2><h3 id="六种可变因素导致社会发展差异"><a href="#六种可变因素导致社会发展差异" class="headerlink" title="六种可变因素导致社会发展差异"></a>六种可变因素导致社会发展差异</h3><ol>
+<li>岛屿气候</li>
+<li>地质因素</li>
+<li>海洋资源</li>
+<li>面积</li>
+<li>地形</li>
+<li>隔离程度<h3 id="生存与其他因素的关系"><a href="#生存与其他因素的关系" class="headerlink" title="生存与其他因素的关系"></a>生存与其他因素的关系</h3></li>
 </ol>
-<h3 id="鲁棒性"><a href="#鲁棒性" class="headerlink" title="鲁棒性"></a>鲁棒性</h3><ol>
-<li>不能存在崩溃风险，检查输入的合法性</li>
-</ol>
-<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><h3 id="画图"><a href="#画图" class="headerlink" title="画图"></a>画图</h3><p>将复杂的数据结构或操作形象化</p>
-<h3 id="举例子"><a href="#举例子" class="headerlink" title="举例子"></a>举例子</h3><p>将抽象问题具体化</p>
-<h3 id="分解"><a href="#分解" class="headerlink" title="分解"></a>分解</h3><p>将复杂问题简单化</p>
-<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><h3 id="时间优化"><a href="#时间优化" class="headerlink" title="时间优化"></a>时间优化</h3><ul>
-<li>用指针传复杂数据类型</li>
-<li>递归与循环并不相同</li>
-</ul>
-<h4 id="空间优化"><a href="#空间优化" class="headerlink" title="空间优化"></a>空间优化</h4><ul>
-<li>时间和空间的权衡</li>
-</ul>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>剑指Offer</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>剑指Offer-基础知识</title>
-    <url>/2020/06/23/offer2/</url>
-    <content><![CDATA[<p>基础知识很重要，语言方面多看书，数据结构与算法不如去刷LeetCode</p>
-<a id="more"></a>
-<h2 id="语言"><a href="#语言" class="headerlink" title="语言"></a>语言</h2><p>只关注那些和我有关的语言，Perl,C#,object C啥的就不考虑了</p>
-<h3 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h3><p>语言面试的三种类型</p>
+<h2 id="粮食-1"><a href="#粮食-1" class="headerlink" title="粮食"></a>粮食</h2><p>粮食带来更多的人口，更多的劳动力，也就才有科学技术/行政体系/军队</p>
+<h3 id="定居"><a href="#定居" class="headerlink" title="定居"></a>定居</h3><p>粮食带来定居</p>
 <ol>
-<li>直接问对C++语言的理解：类型转换的关键字，变量申请的顺序等，sizeof相关</li>
-<li>给出实现准备好的代码：要求对考点有较为深刻的认识，推荐书籍：Effective C++突击时用，C++Primer学习时用，Inside C++ Object Model对类的理解，The C++ Programming Language深入理解</li>
-<li>写代码定义好的一个类型的成员函数：涉及重载，析构，构造等</li>
+<li>定居带来更高的人口生育率和抚养率</li>
+<li>定居还带来粮食贮藏，贮藏就需要行政组织等无需进行农作物生产的组织</li>
+<li>农业还能带来大量皮毛/棉花等，帮助人群适应恶劣环境</li>
+<li>更多的人也会带来疾病</li>
 </ol>
-<p>需要注意异常安全性，例如内存不足会带来什么后果之类的</p>
-<h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p>常见数据结构</p>
-<ul>
-<li>数组</li>
-<li>字符串</li>
-<li>链表</li>
-<li>树</li>
-<li>栈</li>
-<li>队列</li>
-</ul>
-<p>tips:</p>
-<ul>
-<li>数组：从后往前复制省空间</li>
-<li>链表：单向链表，环链表，双向链表，复杂链表</li>
-<li>树：红黑树，堆，树的遍历，树的重构</li>
-<li>栈与队列：</li>
-</ul>
-<h3 id="算法与数据操作"><a href="#算法与数据操作" class="headerlink" title="算法与数据操作"></a>算法与数据操作</h3><p>常见算法</p>
-<ul>
-<li>查找：顺序，二分，查找，二叉：要能够手写二分</li>
-<li>排序：插入排序，冒泡排序，归并排序，快速排序</li>
-<li>递归与循环：一般递归比较简洁，优先选择递归</li>
-<li>位运算</li>
-</ul>
+<h3 id="粮食生产的因素"><a href="#粮食生产的因素" class="headerlink" title="粮食生产的因素"></a>粮食生产的因素</h3><ol>
+<li>野生食物来源减少</li>
+<li>可循环野生植物的可能性增加</li>
+<li>粮食生产基于技术，而技术开源积累</li>
+<li>人口和粮食生产的关系<h3 id="植物"><a href="#植物" class="headerlink" title="植物"></a>植物</h3>通过收获这些具有特别可取品质的野生植物，古人(其他动物)在无意识中传播了这些植物，让它们走上驯化之路</li>
+</ol>
+<h4 id="适合驯化的特征"><a href="#适合驯化的特征" class="headerlink" title="适合驯化的特征"></a>适合驯化的特征</h4><ol>
+<li>适合收集的种子</li>
+<li>适合储藏的种子</li>
+<li>繁殖系统</li>
+<li>数量够多</li>
+</ol>
+<h4 id="驯化过程"><a href="#驯化过程" class="headerlink" title="驯化过程"></a>驯化过程</h4><ol>
+<li>本身可以食用的单年生作物</li>
+<li>纤维作物(如果有足够动物皮毛可以跳过)</li>
+<li>多年生作物</li>
+<li>果树<h4 id="驯化的共性"><a href="#驯化的共性" class="headerlink" title="驯化的共性"></a>驯化的共性</h4>淀粉植物占绝对多数，也是最早驯化的植物<h3 id="动物"><a href="#动物" class="headerlink" title="动物"></a>动物</h3>可驯化的动物都是可以驯化的；不可驯化的动物各有各的不可驯化之处</li>
+</ol>
 ]]></content>
       <categories>
         <category>读书笔记</category>
       </categories>
+  </entry>
+  <entry>
+    <title>Flicker</title>
+    <url>/2020/06/21/flicker/</url>
+    <content><![CDATA[<p>明天拍日蚀，先把后期工具准备好<br><a id="more"></a></p>
+<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>去除视频的闪烁，例如</p>
+<ul>
+<li>交流电照明下的频闪</li>
+<li>延时曝光不同导致的亮度突变</li>
+</ul>
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>百度云的后期工具文件夹中</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><ol>
+<li>把安装得到aex文件放入到pr的plug-ins中即可，绝对不是什么神奇的Common文件夹，别听教程内容瞎说</li>
+</ol>
+]]></content>
+      <categories>
+        <category>PR</category>
+      </categories>
       <tags>
-        <tag>剑指Offer</tag>
+        <tag>flicker</tag>
+        <tag>延时</tag>
+        <tag>频闪</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>亡羊补牢</title>
+    <url>/2019/11/20/init/</url>
+    <content><![CDATA[<a id="more"></a>
+<p>都已经研一老老🐕了，才写出第一篇博客。还是个hexo测试博客，希望能有个好的开始吧。</p>
+<h2 id="图片插入测试"><a href="#图片插入测试" class="headerlink" title="图片插入测试"></a>图片插入测试</h2><p><img src="https://githubphoto.oss-cn-beijing.aliyuncs.com/img/_DSC8937.jpg" alt="小蜥蜴"></p>
+<h2 id="公式编辑测试"><a href="#公式编辑测试" class="headerlink" title="公式编辑测试"></a>公式编辑测试</h2><p>貌似mathjax的cdn有问题的样子，能正常解析，但却加载不出来，难受</p>
+<script type="math/tex; mode=display">\nabla\times\vec{E}=-\frac{\partial\vec{B}}{\partial t}</script>]]></content>
+  </entry>
+  <entry>
+    <title>InnoDB-Basic</title>
+    <url>/2020/06/21/innodb1/</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>面MSRA的时候翻车了，果然应该投点时间给项目经历的，之前时间都投给算法题了，失误失误。好好看一下InnoDB的文档和实现细节好了，说不定什么时候能用上。虽然以前用的是5.6？还是5.7？忘了，反正世博不换8.0.看最新的8.0好了，顺便学习一下全新的Transaction调度算法，对身体好。</p>
+<a id="more"></a>
+<h2 id="InnoDB关键特性"><a href="#InnoDB关键特性" class="headerlink" title="InnoDB关键特性"></a>InnoDB关键特性</h2><ul>
+<li><p>ACID和事务</p>
+</li>
+<li><p>行级锁，Oracle-sytle consistent reads</p>
+</li>
+<li>自动化主键</li>
+<li>外键</li>
+</ul>
+<h2 id="消耗"><a href="#消耗" class="headerlink" title="消耗"></a>消耗</h2><ul>
+<li>高CPU</li>
+<li>高内存</li>
+<li>高硬盘</li>
+</ul>
+<h2 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h2><p>ACID主要是针对事务而言的，每一项功能都有与之对应的MySQL设置或特性。</p>
+<h3 id="Atomicity"><a href="#Atomicity" class="headerlink" title="Atomicity"></a>Atomicity</h3><p>事务是不可分割的最小工作单位</p>
+<ul>
+<li>Autocommit setting.</li>
+<li>COMMIT statement.</li>
+<li>ROLLBACK statement.</li>
+<li>Operational data from the INFORMATION_SCHEMA tables.</li>
+</ul>
+<h3 id="Consistency"><a href="#Consistency" class="headerlink" title="Consistency"></a>Consistency</h3><p>事务后不应当出现结构性错误，主要是防Crash</p>
+<ul>
+<li>DoubleWrite Buffer in InnoDB</li>
+<li>Crash recovery in InnoDB</li>
+</ul>
+<h3 id="Isolation"><a href="#Isolation" class="headerlink" title="Isolation"></a>Isolation</h3><p>并发事务隔离</p>
+<ul>
+<li>Autocommit setting.</li>
+<li>SET ISOLATION LEVEL statement.</li>
+<li>The low-level details of InnoDB locking. During performance tuning, you see these details through INFORMATION_SCHEMA tables.</li>
+</ul>
+<h3 id="Durability"><a href="#Durability" class="headerlink" title="Durability"></a>Durability</h3><p>内容提交后将不再修改，实现起来相当麻烦，且于硬件性能关系密切，例如CPU性能，磁盘性能，对于异地部署而言还需要考虑网络性能。</p>
+<ul>
+<li>InnoDB doublewrite buffer, turned on and off by the innodb_doublewrite configuration option.</li>
+<li>Configuration option innodb_flush_log_at_trx_commit.</li>
+<li>Configuration option sync_binlog.</li>
+<li>Configuration option innodb_file_per_table.</li>
+<li>Write buffer in a storage device, such as a disk drive, SSD, or RAID array.</li>
+<li>Battery-backed cache in a storage device.</li>
+<li>The operating system used to run MySQL, in particular its support for the fsync() system call.</li>
+<li>Uninterruptible power supply (UPS) protecting the electrical power to all computer servers and storage devices that run MySQL servers and store MySQL data.</li>
+<li>Your backup strategy, such as frequency and types of backups, and backup retention periods.</li>
+<li>For distributed or hosted data applications, the particular characteristics of the data centers where the hardware for the MySQL servers is located, and network connections between the data centers.</li>
+</ul>
+<h3 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h3><ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>数据库</category>
+      </categories>
+      <tags>
+        <tag>InnoDB</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>InnoDB-MVCC</title>
+    <url>/2020/06/21/innodb2/</url>
+    <content><![CDATA[<p>多用户，事务，回滚与持久化<br><a id="more"></a></p>
+<h2 id="三个额外域"><a href="#三个额外域" class="headerlink" title="三个额外域"></a>三个额外域</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>长度/Byte</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB_TRX_ID</td>
+<td>6</td>
+<td>最后插入/修改该行的事务ID</td>
+</tr>
+<tr>
+<td>DB_ROLL_PTR</td>
+<td>7</td>
+<td>历史数据(undo log)指针</td>
+</tr>
+<tr>
+<td>DB_ROW_ID</td>
+<td>6</td>
+<td>自增行号，只在使用默认自增的时候才会出现</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>此外，还有一个删除标志位，用于表示数据已被删除，然而并没有写该标志位的具体位置，需要看看源码</p>
+<h2 id="Undo-Logs"><a href="#Undo-Logs" class="headerlink" title="Undo Logs"></a>Undo Logs</h2><p>Undo logs有两种，insert undo logs &amp; update undo logs</p>
+<h3 id="insert-undo-logs"><a href="#insert-undo-logs" class="headerlink" title="insert undo logs"></a>insert undo logs</h3><p>仅用于事务回滚，且在事务提交后就可以回收。有点疑惑具体的使用场景</p>
+<h3 id="update-undo-logs"><a href="#update-undo-logs" class="headerlink" title="update undo logs"></a>update undo logs</h3><p>用于一致性读，但是只有在没有事务会读到该数据的前提下才能回收。主要用于提供不同时间点的快照</p>
+<h3 id="Notice"><a href="#Notice" class="headerlink" title="Notice"></a>Notice</h3><p>周期性将事务提交是一个好习惯，否则InnoDB不知道现在应该回收哪些数据，进而可能导致rollback segment太大</p>
+<h3 id="Space"><a href="#Space" class="headerlink" title="Space"></a>Space</h3><p>undo log所占空间一般比常规的行要小，具体计算方法未知</p>
+<h3 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h3><p>在InnoDB的MVCC中，删除行时只会加上一个标志位，并不是马上就物理删除的，只有在没有事务会再读到该数据时，才会用非常快的速度将其从rollback segment物理删除(purge)。具体的触发条件是，删除该行的update undo log被回收的时候，进行purge操作。<br>注意，以保证服务质量，purge线程只有在没有数据写入的情况下运行，所以如果边写边删，purge线程将会一直被延迟执行，最终导致数据库会越来越大。具体延迟时间，通过参数innodb_max_purge_lag调整。</p>
+<h2 id="MVCC和辅助索引"><a href="#MVCC和辅助索引" class="headerlink" title="MVCC和辅助索引"></a>MVCC和辅助索引</h2><p>主索引进行更新的时候，如前文所示，会将当前数据拷贝到rollback segment中，再原地修改当前的数据。由于辅助索引不具备TRX_ID等额外列，所以做不到原地修改的效果。</p>
+<h3 id="辅助索引修改流程"><a href="#辅助索引修改流程" class="headerlink" title="辅助索引修改流程"></a>辅助索引修改流程</h3><ol>
+<li>旧索引项被标记为删除</li>
+<li>插入新索引</li>
+<li>删除旧索引</li>
+</ol>
+<h3 id="删除时被访问"><a href="#删除时被访问" class="headerlink" title="删除时被访问"></a>删除时被访问</h3><p>当被标记删除的索引项被访问到时，InnoDB会先去找主索引，再检查上文中的那一堆DB_TRX_ID等。如果DB_TRX_ID不对，则会放弃使用辅助索引，直接去主索引里面找（遍历）</p>
+<h3 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h3><p>当Index Condition Pushdown优化被打开时，而且刚好Where项里的内容能够用索引找到，MySQL上层服务会直接把整个Where语句推给底层的InnoDB引擎，InnoDB会先去索引里面找有没有符合项，如果没有，那就认为这个Where啥也没选中，返回空；如果找到了，即使被标记为删除，InnoDB还是会去主索引里面再确认一下DB_TRX_ID和其他使用该辅助索引无法确定的判断条件等信息。</p>
+<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>数据库</category>
+      </categories>
+      <tags>
+        <tag>InnoDB</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>InnoDB-Lock/Transaction</title>
+    <url>/2020/06/21/innodb4/</url>
+    <content><![CDATA[<p>并发，重头戏</p>
+<a id="more"></a>
+<h2 id="Locking"><a href="#Locking" class="headerlink" title="Locking"></a>Locking</h2><h3 id="Shared-and-Exclusive-Locks"><a href="#Shared-and-Exclusive-Locks" class="headerlink" title="Shared and Exclusive Locks"></a>Shared and Exclusive Locks</h3><p>InnoDB默认使用的是行级锁(row-level locking)，具体分成两种，shared(s) locks和exclusive(x) locks。前者用于读，后者用于更改与删除。</p>
+<ul>
+<li>T1 s lock-&gt;T2 s lock get immediately</li>
+<li>T1 s lock-&gt;T2 x lock hold on</li>
+<li>T2 x lock-&gt;T2 any lock hold on</li>
+</ul>
+<h3 id="Intention-Locks"><a href="#Intention-Locks" class="headerlink" title="Intention Locks"></a>Intention Locks</h3><p>意向锁(intention locks)是一种表锁，用于告诉其他用户该事务在之后的操作中会对行进行什么类型的锁。</p>
+<ul>
+<li>Intention shared lock(IS)：意向共享锁</li>
+<li>Intention exclusive lock(IX)：意向排他锁</li>
+</ul>
+<h4 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h4><ul>
+<li>事务在申请行级共享锁之前，需要申请IS锁</li>
+<li>事务在申请行级排他锁之前，需要申请IX锁</li>
+</ul>
+<h4 id="冲突关系"><a href="#冲突关系" class="headerlink" title="冲突关系"></a>冲突关系</h4><p>下表为普通的表锁与意向锁之间的冲突关系，一旦出现冲突，只有当前的锁被释放才能够进行进一步的操作。此外，意向锁只会和表锁产生冲突，行锁粒度的冲突交由行锁去处理，所以IS和IX可以共存。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>x</th>
+<th>IX</th>
+<th>S</th>
+<th>IS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>×</td>
+<td>×</td>
+<td>×</td>
+<td>×</td>
+</tr>
+<tr>
+<td>IX</td>
+<td>×</td>
+<td>√</td>
+<td>×</td>
+<td>√</td>
+</tr>
+<tr>
+<td>S</td>
+<td>×</td>
+<td>×</td>
+<td>√</td>
+<td>√</td>
+</tr>
+<tr>
+<td>IS</td>
+<td>×</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Record-Locks"><a href="#Record-Locks" class="headerlink" title="Record Locks"></a>Record Locks</h3><p>用于锁定索引本身的锁，不论是主索引还是辅助索引。例如</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SELECT c1 FROM t WHERE c1 = 10 FOR UPDATE;</span><br><span class="line">用于锁定所有c1为10的记录，防止其他事务插入/删除/修改c1为10的数据</span><br></pre></td></tr></table></figure>
+<h3 id="Gap-Locks"><a href="#Gap-Locks" class="headerlink" title="Gap Locks"></a>Gap Locks</h3><p>Record Locks的进阶版，选中一个范围内的数据，不允许其他事务在这个范围内进行增删改查。Gap Locks可用于单索引，多索引，甚至没有索引也是可以的。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SELECT c1 FROM t WHERE c1 BETWEEN 10 AND 20 FOR UPDATE;</span><br></pre></td></tr></table></figure>
+<p>对于读unique列的操作，加上Gap Locks是多此一举的行为。多个Gap Locks是可以被Merge的，在真正的修改操作进行前，并不会导致任何冲突。</p>
+<h3 id="Next-Key-Locks"><a href="#Next-Key-Locks" class="headerlink" title="Next-Key Locks"></a>Next-Key Locks</h3><p>Next-Key Locks是Record Locks和Gap Locks的复合体。该操作并不需要手动指定锁的范围，而是锁住相关行的前/后一行之间的间隙。</p>
+<h3 id="Insert-Intention-Locks"><a href="#Insert-Intention-Locks" class="headerlink" title="Insert Intention Locks"></a>Insert Intention Locks</h3><p>Gap锁的一种，用于表示该事务会在一定范围内插入数据，以提高并行插入的能力，如果两个事务的Insert Intention Locks没有重叠区域，则把他们一起运行也不会对系统有什么不良影响。</p>
+<h3 id="AUTO-INC-Locks"><a href="#AUTO-INC-Locks" class="headerlink" title="AUTO-INC Locks"></a>AUTO-INC Locks</h3><p>特殊的表锁，用于自增主键</p>
+<h3 id="Predicate-Locks-for-Spatial-Indexs"><a href="#Predicate-Locks-for-Spatial-Indexs" class="headerlink" title="Predicate Locks for Spatial Indexs"></a>Predicate Locks for Spatial Indexs</h3><p>空间索引(地理数据之类的二维索引)不在考虑范围内，所以忽略</p>
+<h2 id="Transaction"><a href="#Transaction" class="headerlink" title="Transaction"></a>Transaction</h2><h3 id="Transaction-Isolation"><a href="#Transaction-Isolation" class="headerlink" title="Transaction Isolation"></a>Transaction Isolation</h3><h4 id="Read-Uncommited"><a href="#Read-Uncommited" class="headerlink" title="Read Uncommited"></a>Read Uncommited</h4><p>完全不加锁，一切随缘，脏读幻读都有可能</p>
+<h4 id="Read-Committed"><a href="#Read-Committed" class="headerlink" title="Read Committed"></a>Read Committed</h4><p>单次读的一致性有保障，但一个事务中的所有读的一致性没有保障，有可能出现幻读</p>
+<ul>
+<li>读一般只会上行锁，只有在外键和重复键检查的时候才会用Gap Locks</li>
+<li>对于删除和修改，依然使用行锁，在Where筛选结束后，将会释放那些无关的行，虽然概率小，但还是会死锁</li>
+<li>要修改已经被锁上的行时，MySQL会先读一下，初步确定是否符合Where条件，符合条件后又再次进行上锁与读取的操作</li>
+</ul>
+<h4 id="Repeatable-Read-default"><a href="#Repeatable-Read-default" class="headerlink" title="Repeatable Read(default)"></a>Repeatable Read(default)</h4><p>一个事务的读一致性有所保障</p>
+<ul>
+<li>Unique Index，只会锁一行</li>
+<li>其他的，上Gap Locks/Next-Key Locks</li>
+</ul>
+<h4 id="Serializable"><a href="#Serializable" class="headerlink" title="Serializable"></a>Serializable</h4><p>最高强度的隔离，会在每一句SELECT之后加上’FOR SHARE’</p>
+<h3 id="AutoCommit-Commit-amp-Rollback"><a href="#AutoCommit-Commit-amp-Rollback" class="headerlink" title="AutoCommit, Commit&amp;Rollback"></a>AutoCommit, Commit&amp;Rollback</h3><h4 id="AutoCommit"><a href="#AutoCommit" class="headerlink" title="AutoCommit"></a>AutoCommit</h4><p>每个SQL语句都会构成一个事务，没有错误的事务被执行后都会被Commit，错误的执行会被Rollback</p>
+<h4 id="Commit"><a href="#Commit" class="headerlink" title="Commit"></a>Commit</h4><p>意味着该事务的操作会被其他事务看到</p>
+<h3 id="Consistent-Nonlocking-Reads"><a href="#Consistent-Nonlocking-Reads" class="headerlink" title="Consistent Nonlocking Reads"></a>Consistent Nonlocking Reads</h3><p>使用MVCC+s locks让多个事务同时读写数据，而且不会互相干扰，具体效果依据隔离程度决定。在以下情况，该功能不可用</p>
+<ul>
+<li>DROP TABLE</li>
+<li>ALTER TABLE</li>
+</ul>
+<h3 id="Locking-Reads"><a href="#Locking-Reads" class="headerlink" title="Locking Reads"></a>Locking Reads</h3><p>普通的SELECT可能隔离强度不足，手动加锁</p>
+<ul>
+<li>SELECT FOR SHARE</li>
+<li>SELECT FOR UPDATE</li>
+</ul>
+<h2 id="Deadlocks"><a href="#Deadlocks" class="headerlink" title="Deadlocks"></a>Deadlocks</h2><h3 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h3><p>死锁是由写操作产生的，所以改变隔离状态不会让死锁问题得到改善。</p>
+<ul>
+<li>写粒度要小</li>
+<li>多用事务，少用表锁</li>
+</ul>
+<h3 id="Detection-and-Rollback"><a href="#Detection-and-Rollback" class="headerlink" title="Detection and Rollback"></a>Detection and Rollback</h3><ul>
+<li>碰撞检测(有向图找环)；如果出现超过200个事务在等待；也可以关掉使用事务超时进行判断</li>
+<li>选择插入/更新/删除行数最小的事务回滚</li>
+<li>InnoDB回滚时，会释放所有的锁。但是，存在个别情况，例如语句执行失败后，仅仅回滚这一条语句，则不会释放该语句的锁，因为InnoDB不存储SQL语句与锁的对应关系</li>
+<li>如果是SELECT在事务中调用预先设置好的内建函数，而且出现语句失败，则该语句会回滚，如果又进一步手动执行ROLLBACK，会导致整个事务一起回滚</li>
+</ul>
+<h2 id="Scheduling"><a href="#Scheduling" class="headerlink" title="Scheduling"></a>Scheduling</h2><p>Contention-Aware Transaction Scheduling(CATS)，基于权重决定事务优先关系，权重由以下内容决定</p>
+<ul>
+<li>为阻塞事务数目多的事务更高的权重</li>
+<li>阻塞数目一样多，等待时间长的更高权重</li>
+</ul>
+<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>数据库</category>
+      </categories>
+      <tags>
+        <tag>InnoDB</tag>
       </tags>
   </entry>
   <entry>
@@ -446,7 +614,32 @@
       </tags>
   </entry>
   <entry>
-    <title>InnoDB-Disk IO & File Space</title>
+    <title>kerberos</title>
+    <url>/2020/07/07/kerberos/</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于某些原因，需要使用kerberos登录服务器，但由于VScode没有原生支持，所以在这个地方写一下解决方法。</p>
+<a id="more"></a>
+<h2 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h2><ol>
+<li>安装Kerberos等软件，按照要求进行配置</li>
+<li>安装PuTTY</li>
+<li>在PuTTY中设置一个名为remote的session，需要包括以下内容<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">Session-&gt;</span><span class="bash">Host Name</span></span><br><span class="line"><span class="meta">Connection-&gt;</span><span class="bash">SSH-&gt;Auth-&gt;GSSAPI</span></span><br><span class="line"><span class="meta">Connection-&gt;</span><span class="bash">Data</span></span><br></pre></td></tr></table></figure></li>
+<li>编写C:/Users/<name>/ssh.bat脚本<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo OpenSSH</span><br><span class="line">SET mypath=%~dp0</span><br><span class="line">powershell %mypath%ssh.ps1</span><br></pre></td></tr></table></figure></li>
+<li>同目录下编写脚本ssh.ps1<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash">ArgArray = [System.Collections.ArrayList]<span class="variable">$Args</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash">ind = <span class="variable">$ArgArray</span>.IndexOf(<span class="string">"-F"</span>)</span></span><br><span class="line">if ($ind -ge 0) &#123;</span><br><span class="line">    $ArgArray.RemoveAt($ind)</span><br><span class="line">    $ArgArray.RemoveAt($ind)</span><br><span class="line">&#125;</span><br><span class="line">Write-Host $ArgArray</span><br><span class="line">&amp; 'C:\Program Files\PuTTY\plink.exe' $ArgArray</span><br></pre></td></tr></table></figure></li>
+<li>修改vscode中的”remote.SSH.path”值，将其改为ssh.bat的路径</li>
+<li>在ssh配置中添加以下内容<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host remote #上文中名为remote的配置</span><br><span class="line">    HostName remote</span><br><span class="line">    User XXXX</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>操作指南</category>
+      </categories>
+      <tags>
+        <tag>ssh</tag>
+        <tag>vscode</tag>
+        <tag>kerberos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>InnoDB-Disk IO &amp; File Space</title>
     <url>/2020/06/21/innodb5/</url>
     <content><![CDATA[<p>空间管理</p>
 <a id="more"></a>
@@ -626,128 +819,205 @@
       </tags>
   </entry>
   <entry>
-    <title>InnoDB-Lock/Transaction</title>
-    <url>/2020/06/21/innodb4/</url>
-    <content><![CDATA[<p>并发，重头戏</p>
+    <title>剑指Offer-代码质量，问题分析，优化</title>
+    <url>/2020/06/23/offer3/</url>
+    <content><![CDATA[<ul>
+<li>好看的结构，明确的命名，以及异常处理</li>
+<li>画图，举例，分解</li>
+<li>空间优化，时间优化</li>
+</ul>
 <a id="more"></a>
-<h2 id="Locking"><a href="#Locking" class="headerlink" title="Locking"></a>Locking</h2><h3 id="Shared-and-Exclusive-Locks"><a href="#Shared-and-Exclusive-Locks" class="headerlink" title="Shared and Exclusive Locks"></a>Shared and Exclusive Locks</h3><p>InnoDB默认使用的是行级锁(row-level locking)，具体分成两种，shared(s) locks和exclusive(x) locks。前者用于读，后者用于更改与删除。</p>
+<h2 id="代码质量"><a href="#代码质量" class="headerlink" title="代码质量"></a>代码质量</h2><h3 id="完整性"><a href="#完整性" class="headerlink" title="完整性"></a>完整性</h3><ol>
+<li>功能测试</li>
+<li>边界测试</li>
+<li>负面测试</li>
+</ol>
+<h3 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h3><ol>
+<li>使用返回值告知执行结果</li>
+<li>全局变量</li>
+<li>抛出异常</li>
+</ol>
+<h3 id="鲁棒性"><a href="#鲁棒性" class="headerlink" title="鲁棒性"></a>鲁棒性</h3><ol>
+<li>不能存在崩溃风险，检查输入的合法性</li>
+</ol>
+<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><h3 id="画图"><a href="#画图" class="headerlink" title="画图"></a>画图</h3><p>将复杂的数据结构或操作形象化</p>
+<h3 id="举例子"><a href="#举例子" class="headerlink" title="举例子"></a>举例子</h3><p>将抽象问题具体化</p>
+<h3 id="分解"><a href="#分解" class="headerlink" title="分解"></a>分解</h3><p>将复杂问题简单化</p>
+<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><h3 id="时间优化"><a href="#时间优化" class="headerlink" title="时间优化"></a>时间优化</h3><ul>
+<li>用指针传复杂数据类型</li>
+<li>递归与循环并不相同</li>
+</ul>
+<h4 id="空间优化"><a href="#空间优化" class="headerlink" title="空间优化"></a>空间优化</h4><ul>
+<li>时间和空间的权衡</li>
+</ul>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>剑指Offer</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>剑指Offer-基础知识</title>
+    <url>/2020/06/23/offer2/</url>
+    <content><![CDATA[<p>基础知识很重要，语言方面多看书，数据结构与算法不如去刷LeetCode</p>
+<a id="more"></a>
+<h2 id="语言"><a href="#语言" class="headerlink" title="语言"></a>语言</h2><p>只关注那些和我有关的语言，Perl,C#,object C啥的就不考虑了</p>
+<h3 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h3><p>语言面试的三种类型</p>
+<ol>
+<li>直接问对C++语言的理解：类型转换的关键字，变量申请的顺序等，sizeof相关</li>
+<li>给出实现准备好的代码：要求对考点有较为深刻的认识，推荐书籍：Effective C++突击时用，C++Primer学习时用，Inside C++ Object Model对类的理解，The C++ Programming Language深入理解</li>
+<li>写代码定义好的一个类型的成员函数：涉及重载，析构，构造等</li>
+</ol>
+<p>需要注意异常安全性，例如内存不足会带来什么后果之类的</p>
+<h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p>常见数据结构</p>
 <ul>
-<li>T1 s lock-&gt;T2 s lock get immediately</li>
-<li>T1 s lock-&gt;T2 x lock hold on</li>
-<li>T2 x lock-&gt;T2 any lock hold on</li>
+<li>数组</li>
+<li>字符串</li>
+<li>链表</li>
+<li>树</li>
+<li>栈</li>
+<li>队列</li>
 </ul>
-<h3 id="Intention-Locks"><a href="#Intention-Locks" class="headerlink" title="Intention Locks"></a>Intention Locks</h3><p>意向锁(intention locks)是一种表锁，用于告诉其他用户该事务在之后的操作中会对行进行什么类型的锁。</p>
+<p>tips:</p>
 <ul>
-<li>Intention shared lock(IS)：意向共享锁</li>
-<li>Intention exclusive lock(IX)：意向排他锁</li>
+<li>数组：从后往前复制省空间</li>
+<li>链表：单向链表，环链表，双向链表，复杂链表</li>
+<li>树：红黑树，堆，树的遍历，树的重构</li>
+<li>栈与队列：</li>
 </ul>
-<h4 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h4><ul>
-<li>事务在申请行级共享锁之前，需要申请IS锁</li>
-<li>事务在申请行级排他锁之前，需要申请IX锁</li>
+<h3 id="算法与数据操作"><a href="#算法与数据操作" class="headerlink" title="算法与数据操作"></a>算法与数据操作</h3><p>常见算法</p>
+<ul>
+<li>查找：顺序，二分，查找，二叉：要能够手写二分</li>
+<li>排序：插入排序，冒泡排序，归并排序，快速排序</li>
+<li>递归与循环：一般递归比较简洁，优先选择递归</li>
+<li>位运算</li>
 </ul>
-<h4 id="冲突关系"><a href="#冲突关系" class="headerlink" title="冲突关系"></a>冲突关系</h4><p>下表为普通的表锁与意向锁之间的冲突关系，一旦出现冲突，只有当前的锁被释放才能够进行进一步的操作。此外，意向锁只会和表锁产生冲突，行锁粒度的冲突交由行锁去处理，所以IS和IX可以共存。</p>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>剑指Offer</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>剑指Offer-其他能力</title>
+    <url>/2020/06/23/offer4/</url>
+    <content><![CDATA[<p>其他不会系统考察但十分重要的能力</p>
+<a id="more"></a>
+<h2 id="沟通能力"><a href="#沟通能力" class="headerlink" title="沟通能力"></a>沟通能力</h2><ul>
+<li>沟通不是夸夸其谈</li>
+<li>不能不懂装懂</li>
+<li>可能涉及外语沟通</li>
+</ul>
+<h2 id="学习能力"><a href="#学习能力" class="headerlink" title="学习能力"></a>学习能力</h2><ul>
+<li>询问最近在学什么，做什么</li>
+<li>抛出一个新概念，现场写代码</li>
+</ul>
+<h2 id="善于提问"><a href="#善于提问" class="headerlink" title="善于提问"></a>善于提问</h2><ul>
+<li>有不理解的地方，及时提出，有的题目就是故意模棱两可的</li>
+</ul>
+<h2 id="知识迁移能力"><a href="#知识迁移能力" class="headerlink" title="知识迁移能力"></a>知识迁移能力</h2><ul>
+<li>类的思想</li>
+<li>GC的原理</li>
+</ul>
+<h2 id="抽象建模能力"><a href="#抽象建模能力" class="headerlink" title="抽象建模能力"></a>抽象建模能力</h2><ol>
+<li>选择合适的数据结构表述问题</li>
+<li>分析规律</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>剑指Offer</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>重新搭建博客编写环境</title>
+    <url>/2020/06/20/restart/</url>
+    <content><![CDATA[<p>太久没写博客了，最近要看一下InnoDB的东西，内容有点多，需要写一点内容，然而家里没有写博客的环境，故写下该指南，留备以后使用<br><a id="more"></a></p>
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><h3 id="node-js"><a href="#node-js" class="headerlink" title="node.js"></a>node.js</h3><ol>
+<li><a href="https://nodejs.org/en/" target="_blank" rel="noopener">下载</a>node.js</li>
+<li>一路Next安装</li>
+<li>win10设置里搜索powershell，打开非签名脚本的运行</li>
+</ol>
+<h3 id="Hexo"><a href="#Hexo" class="headerlink" title="Hexo"></a>Hexo</h3><ol>
+<li>找到hexo<a href="https://hexo.io/" target="_blank" rel="noopener">主页</a></li>
+<li>安装</li>
+</ol>
+<h3 id="hexo-deployer-git"><a href="#hexo-deployer-git" class="headerlink" title="hexo-deployer-git"></a>hexo-deployer-git</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+<h3 id="PicGo"><a href="#PicGo" class="headerlink" title="PicGo"></a>PicGo</h3><ol>
+<li>下载并安装<a href="https://github.com/Molunerfinn/PicGo/releases" target="_blank" rel="noopener">PicGO</a>，下载速度是真滴慢，佛了</li>
+<li>配置阿里云OSS</li>
+</ol>
 <div class="table-container">
 <table>
 <thead>
 <tr>
-<th></th>
-<th>x</th>
-<th>IX</th>
-<th>S</th>
-<th>IS</th>
+<th>条目</th>
+<th>内容</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>X</td>
-<td>×</td>
-<td>×</td>
-<td>×</td>
-<td>×</td>
+<td>KeyID</td>
+<td>保密</td>
 </tr>
 <tr>
-<td>IX</td>
-<td>×</td>
-<td>√</td>
-<td>×</td>
-<td>√</td>
+<td>KeySecret</td>
+<td>保密</td>
 </tr>
 <tr>
-<td>S</td>
-<td>×</td>
-<td>×</td>
-<td>√</td>
-<td>√</td>
+<td>存储空间名</td>
+<td>githubphoto</td>
 </tr>
 <tr>
-<td>IS</td>
-<td>×</td>
-<td>√</td>
-<td>√</td>
-<td>√</td>
+<td>存储区域</td>
+<td>oss-cn-beijing</td>
+</tr>
+<tr>
+<td>存储路径</td>
+<td>img/</td>
 </tr>
 </tbody>
 </table>
 </div>
-<h3 id="Record-Locks"><a href="#Record-Locks" class="headerlink" title="Record Locks"></a>Record Locks</h3><p>用于锁定索引本身的锁，不论是主索引还是辅助索引。例如</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SELECT c1 FROM t WHERE c1 = 10 FOR UPDATE;</span><br><span class="line">用于锁定所有c1为10的记录，防止其他事务插入/删除/修改c1为10的数据</span><br></pre></td></tr></table></figure>
-<h3 id="Gap-Locks"><a href="#Gap-Locks" class="headerlink" title="Gap Locks"></a>Gap Locks</h3><p>Record Locks的进阶版，选中一个范围内的数据，不允许其他事务在这个范围内进行增删改查。Gap Locks可用于单索引，多索引，甚至没有索引也是可以的。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SELECT c1 FROM t WHERE c1 BETWEEN 10 AND 20 FOR UPDATE;</span><br></pre></td></tr></table></figure>
-<p>对于读unique列的操作，加上Gap Locks是多此一举的行为。多个Gap Locks是可以被Merge的，在真正的修改操作进行前，并不会导致任何冲突。</p>
-<h3 id="Next-Key-Locks"><a href="#Next-Key-Locks" class="headerlink" title="Next-Key Locks"></a>Next-Key Locks</h3><p>Next-Key Locks是Record Locks和Gap Locks的复合体。该操作并不需要手动指定锁的范围，而是锁住相关行的前/后一行之间的间隙。</p>
-<h3 id="Insert-Intention-Locks"><a href="#Insert-Intention-Locks" class="headerlink" title="Insert Intention Locks"></a>Insert Intention Locks</h3><p>Gap锁的一种，用于表示该事务会在一定范围内插入数据，以提高并行插入的能力，如果两个事务的Insert Intention Locks没有重叠区域，则把他们一起运行也不会对系统有什么不良影响。</p>
-<h3 id="AUTO-INC-Locks"><a href="#AUTO-INC-Locks" class="headerlink" title="AUTO-INC Locks"></a>AUTO-INC Locks</h3><p>特殊的表锁，用于自增主键</p>
-<h3 id="Predicate-Locks-for-Spatial-Indexs"><a href="#Predicate-Locks-for-Spatial-Indexs" class="headerlink" title="Predicate Locks for Spatial Indexs"></a>Predicate Locks for Spatial Indexs</h3><p>空间索引(地理数据之类的二维索引)不在考虑范围内，所以忽略</p>
-<h2 id="Transaction"><a href="#Transaction" class="headerlink" title="Transaction"></a>Transaction</h2><h3 id="Transaction-Isolation"><a href="#Transaction-Isolation" class="headerlink" title="Transaction Isolation"></a>Transaction Isolation</h3><h4 id="Read-Uncommited"><a href="#Read-Uncommited" class="headerlink" title="Read Uncommited"></a>Read Uncommited</h4><p>完全不加锁，一切随缘，脏读幻读都有可能</p>
-<h4 id="Read-Committed"><a href="#Read-Committed" class="headerlink" title="Read Committed"></a>Read Committed</h4><p>单次读的一致性有保障，但一个事务中的所有读的一致性没有保障，有可能出现幻读</p>
-<ul>
-<li>读一般只会上行锁，只有在外键和重复键检查的时候才会用Gap Locks</li>
-<li>对于删除和修改，依然使用行锁，在Where筛选结束后，将会释放那些无关的行，虽然概率小，但还是会死锁</li>
-<li>要修改已经被锁上的行时，MySQL会先读一下，初步确定是否符合Where条件，符合条件后又再次进行上锁与读取的操作</li>
-</ul>
-<h4 id="Repeatable-Read-default"><a href="#Repeatable-Read-default" class="headerlink" title="Repeatable Read(default)"></a>Repeatable Read(default)</h4><p>一个事务的读一致性有所保障</p>
-<ul>
-<li>Unique Index，只会锁一行</li>
-<li>其他的，上Gap Locks/Next-Key Locks</li>
-</ul>
-<h4 id="Serializable"><a href="#Serializable" class="headerlink" title="Serializable"></a>Serializable</h4><p>最高强度的隔离，会在每一句SELECT之后加上’FOR SHARE’</p>
-<h3 id="AutoCommit-Commit-amp-Rollback"><a href="#AutoCommit-Commit-amp-Rollback" class="headerlink" title="AutoCommit, Commit&amp;Rollback"></a>AutoCommit, Commit&amp;Rollback</h3><h4 id="AutoCommit"><a href="#AutoCommit" class="headerlink" title="AutoCommit"></a>AutoCommit</h4><p>每个SQL语句都会构成一个事务，没有错误的事务被执行后都会被Commit，错误的执行会被Rollback</p>
-<h4 id="Commit"><a href="#Commit" class="headerlink" title="Commit"></a>Commit</h4><p>意味着该事务的操作会被其他事务看到</p>
-<h3 id="Consistent-Nonlocking-Reads"><a href="#Consistent-Nonlocking-Reads" class="headerlink" title="Consistent Nonlocking Reads"></a>Consistent Nonlocking Reads</h3><p>使用MVCC+s locks让多个事务同时读写数据，而且不会互相干扰，具体效果依据隔离程度决定。在以下情况，该功能不可用</p>
-<ul>
-<li>DROP TABLE</li>
-<li>ALTER TABLE</li>
-</ul>
-<h3 id="Locking-Reads"><a href="#Locking-Reads" class="headerlink" title="Locking Reads"></a>Locking Reads</h3><p>普通的SELECT可能隔离强度不足，手动加锁</p>
-<ul>
-<li>SELECT FOR SHARE</li>
-<li>SELECT FOR UPDATE</li>
-</ul>
-<h2 id="Deadlocks"><a href="#Deadlocks" class="headerlink" title="Deadlocks"></a>Deadlocks</h2><h3 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h3><p>死锁是由写操作产生的，所以改变隔离状态不会让死锁问题得到改善。</p>
-<ul>
-<li>写粒度要小</li>
-<li>多用事务，少用表锁</li>
-</ul>
-<h3 id="Detection-and-Rollback"><a href="#Detection-and-Rollback" class="headerlink" title="Detection and Rollback"></a>Detection and Rollback</h3><ul>
-<li>碰撞检测(有向图找环)；如果出现超过200个事务在等待；也可以关掉使用事务超时进行判断</li>
-<li>选择插入/更新/删除行数最小的事务回滚</li>
-<li>InnoDB回滚时，会释放所有的锁。但是，存在个别情况，例如语句执行失败后，仅仅回滚这一条语句，则不会释放该语句的锁，因为InnoDB不存储SQL语句与锁的对应关系</li>
-<li>如果是SELECT在事务中调用预先设置好的内建函数，而且出现语句失败，则该语句会回滚，如果又进一步手动执行ROLLBACK，会导致整个事务一起回滚</li>
-</ul>
-<h2 id="Scheduling"><a href="#Scheduling" class="headerlink" title="Scheduling"></a>Scheduling</h2><p>Contention-Aware Transaction Scheduling(CATS)，基于权重决定事务优先关系，权重由以下内容决定</p>
-<ul>
-<li>为阻塞事务数目多的事务更高的权重</li>
-<li>阻塞数目一样多，等待时间长的更高权重</li>
-</ul>
-<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><ul>
-<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-transaction-model.html</a></li>
-</ul>
+<h2 id="下载源项目"><a href="#下载源项目" class="headerlink" title="下载源项目"></a>下载源项目</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone git@github.com:richsoap/RichSoapBlog</span><br></pre></td></tr></table></figure>
+<h2 id="编写内容"><a href="#编写内容" class="headerlink" title="编写内容"></a>编写内容</h2><p>内容在source/_posts下，markdown格式</p>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server //可以动态调试欸，神奇</span><br></pre></td></tr></table></figure>
+<h2 id="发布"><a href="#发布" class="headerlink" title="发布"></a>发布</h2><h3 id="设定发布路径"><a href="#设定发布路径" class="headerlink" title="设定发布路径"></a>设定发布路径</h3><p>_config.yml文件的末尾改为（应该已经改好了</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:richsoap/richsoap.GitHub.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
+<h3 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo generate</span><br><span class="line">hexo deploy</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
-        <category>数据库</category>
+        <category>操作指南</category>
       </categories>
       <tags>
-        <tag>InnoDB</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VR电影中的镜头与音响</title>
+    <url>/2020/07/01/vrmovie/</url>
+    <content><![CDATA[<p>小学妹选了个VR课，oculus都没有就选这样的课也是心大，用手机看了几个VR视频，帮她处理一下观后感作业中有关运镜和音响的部分好了。</p>
+<a id="more"></a>
+<h2 id="电影"><a href="#电影" class="headerlink" title="电影"></a>电影</h2><p>戛纳XR x VeeR 360VR沉浸影像展：秘密怪兽</p>
+<h2 id="镜头"><a href="#镜头" class="headerlink" title="镜头"></a>镜头</h2><h3 id="观众的视角"><a href="#观众的视角" class="headerlink" title="观众的视角"></a>观众的视角</h3><p>VR视频中，观众的视角是可以随意转动的，但观众的位置是不变的，这也就使得固定位置的第三人称旁观者视角可能是观众视角的最好选择。参照游戏中的视角定义，可选视角有第一人称视角，越肩视角和旁观者视角。其中，由于观众视角的可转动性，第一人称视角的效果起伏非常大，当观众按照预设的视角观赏影片可获得非常好的沉浸式体验，但如果观众选择自由发挥，效果将大打折扣，所以要做出适合第一人称视角的VR难度非常大；越肩视角要求摄像机“漂浮”于主角后方，算是第一人称视角的延申，存在全程都在看主角背影，难以介入剧情矛盾的问题；旁观者视角，旁观者视角具有容易布置，能够较好地表达叙述逻辑等优点，正确地放置可以获得不错的沉浸体验，对于不需要互动的VR视频来说非常适合。</p>
+<h3 id="兴趣点的转移"><a href="#兴趣点的转移" class="headerlink" title="兴趣点的转移"></a>兴趣点的转移</h3><p>兴趣点的选择与传统视频制作类似，同样聚焦于互动双方，变化的元素。例如，怪兽与人类互动时，兴趣点位于蜷缩与逃跑的人类，但同时也将怪兽的反应收于背景中；当两只怪兽争吵时，视角则位于两个怪兽之间的胸口高度，让观众能够以弱小的旁观者的角度介入到剧情中，效果很好。</p>
+<h3 id="场景，机位，镜头"><a href="#场景，机位，镜头" class="headerlink" title="场景，机位，镜头"></a>场景，机位，镜头</h3><p>视频主角是绿色怪兽，场景的选择也以表现怪兽的生活为主。具体场景包括，欺负人类，发现入侵者，反抗入侵者，反抗失败，表现出怪兽生活从快乐，到惊恐，到生气，到沮丧的整个变化过程。</p>
+<p>由于观众均以旁观者的身份参与到剧情中，所以基于片中人类的活动选择机位能够增强带入感，便于观众理解剧情，例如，拆大楼时的楼内机位，空袭时的高空机位，打架时的街边机位等。</p>
+<p>由于VR视频的特殊性，只能以恒定焦距运镜，不存在特写和远景切换的叙述方式。此外，为顾及观众视觉和空间感的矛盾，片中使用的基本都是固定机位，基本不存在移动和旋转的情况，这也就使得《鸟人》或《地心引力》这样的长镜头叙事技巧派不上用场，故事推进时只能用切换机位的方式跟上主角的行为，镜头叙事的连贯性有所不足。</p>
+<h2 id="音响"><a href="#音响" class="headerlink" title="音响"></a>音响</h2><h3 id="音乐和音响"><a href="#音乐和音响" class="headerlink" title="音乐和音响"></a>音乐和音响</h3><p>VR视频中的音乐的作用与常规视频中相同，均起到烘托氛围的效果。<br>VR视频中的音响分为不可追溯声源的旁白与来自演出环境中的音效。其中，旁白与音乐类似，与普通视频相比无需特殊处理。但由于观众是可以随意改变视角的，所以为提升沉浸感，影片应当能够依据用户的视角变换分别改变左右声道的声音大小与特效，给予观众正确的声音反馈。</p>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>VR</tag>
+        <tag>Movie</tag>
       </tags>
   </entry>
   <entry>
@@ -860,213 +1130,6 @@
       </categories>
       <tags>
         <tag>InnoDB</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>InnoDB-MVCC</title>
-    <url>/2020/06/21/innodb2/</url>
-    <content><![CDATA[<p>多用户，事务，回滚与持久化<br><a id="more"></a></p>
-<h2 id="三个额外域"><a href="#三个额外域" class="headerlink" title="三个额外域"></a>三个额外域</h2><div class="table-container">
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>长度/Byte</th>
-<th>用途</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>DB_TRX_ID</td>
-<td>6</td>
-<td>最后插入/修改该行的事务ID</td>
-</tr>
-<tr>
-<td>DB_ROLL_PTR</td>
-<td>7</td>
-<td>历史数据(undo log)指针</td>
-</tr>
-<tr>
-<td>DB_ROW_ID</td>
-<td>6</td>
-<td>自增行号，只在使用默认自增的时候才会出现</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>此外，还有一个删除标志位，用于表示数据已被删除，然而并没有写该标志位的具体位置，需要看看源码</p>
-<h2 id="Undo-Logs"><a href="#Undo-Logs" class="headerlink" title="Undo Logs"></a>Undo Logs</h2><p>Undo logs有两种，insert undo logs &amp; update undo logs</p>
-<h3 id="insert-undo-logs"><a href="#insert-undo-logs" class="headerlink" title="insert undo logs"></a>insert undo logs</h3><p>仅用于事务回滚，且在事务提交后就可以回收。有点疑惑具体的使用场景</p>
-<h3 id="update-undo-logs"><a href="#update-undo-logs" class="headerlink" title="update undo logs"></a>update undo logs</h3><p>用于一致性读，但是只有在没有事务会读到该数据的前提下才能回收。主要用于提供不同时间点的快照</p>
-<h3 id="Notice"><a href="#Notice" class="headerlink" title="Notice"></a>Notice</h3><p>周期性将事务提交是一个好习惯，否则InnoDB不知道现在应该回收哪些数据，进而可能导致rollback segment太大</p>
-<h3 id="Space"><a href="#Space" class="headerlink" title="Space"></a>Space</h3><p>undo log所占空间一般比常规的行要小，具体计算方法未知</p>
-<h3 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h3><p>在InnoDB的MVCC中，删除行时只会加上一个标志位，并不是马上就物理删除的，只有在没有事务会再读到该数据时，才会用非常快的速度将其从rollback segment物理删除(purge)。具体的触发条件是，删除该行的update undo log被回收的时候，进行purge操作。<br>注意，以保证服务质量，purge线程只有在没有数据写入的情况下运行，所以如果边写边删，purge线程将会一直被延迟执行，最终导致数据库会越来越大。具体延迟时间，通过参数innodb_max_purge_lag调整。</p>
-<h2 id="MVCC和辅助索引"><a href="#MVCC和辅助索引" class="headerlink" title="MVCC和辅助索引"></a>MVCC和辅助索引</h2><p>主索引进行更新的时候，如前文所示，会将当前数据拷贝到rollback segment中，再原地修改当前的数据。由于辅助索引不具备TRX_ID等额外列，所以做不到原地修改的效果。</p>
-<h3 id="辅助索引修改流程"><a href="#辅助索引修改流程" class="headerlink" title="辅助索引修改流程"></a>辅助索引修改流程</h3><ol>
-<li>旧索引项被标记为删除</li>
-<li>插入新索引</li>
-<li>删除旧索引</li>
-</ol>
-<h3 id="删除时被访问"><a href="#删除时被访问" class="headerlink" title="删除时被访问"></a>删除时被访问</h3><p>当被标记删除的索引项被访问到时，InnoDB会先去找主索引，再检查上文中的那一堆DB_TRX_ID等。如果DB_TRX_ID不对，则会放弃使用辅助索引，直接去主索引里面找（遍历）</p>
-<h3 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h3><p>当Index Condition Pushdown优化被打开时，而且刚好Where项里的内容能够用索引找到，MySQL上层服务会直接把整个Where语句推给底层的InnoDB引擎，InnoDB会先去索引里面找有没有符合项，如果没有，那就认为这个Where啥也没选中，返回空；如果找到了，即使被标记为删除，InnoDB还是会去主索引里面再确认一下DB_TRX_ID和其他使用该辅助索引无法确定的判断条件等信息。</p>
-<h2 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h2><ul>
-<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>数据库</category>
-      </categories>
-      <tags>
-        <tag>InnoDB</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>InnoDB-Basic</title>
-    <url>/2020/06/21/innodb1/</url>
-    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>面MSRA的时候翻车了，果然应该投点时间给项目经历的，之前时间都投给算法题了，失误失误。好好看一下InnoDB的文档和实现细节好了，说不定什么时候能用上。虽然以前用的是5.6？还是5.7？忘了，反正世博不换8.0.看最新的8.0好了，顺便学习一下全新的Transaction调度算法，对身体好。</p>
-<a id="more"></a>
-<h2 id="InnoDB关键特性"><a href="#InnoDB关键特性" class="headerlink" title="InnoDB关键特性"></a>InnoDB关键特性</h2><ul>
-<li><p>ACID和事务</p>
-</li>
-<li><p>行级锁，Oracle-sytle consistent reads</p>
-</li>
-<li>自动化主键</li>
-<li>外键</li>
-</ul>
-<h2 id="消耗"><a href="#消耗" class="headerlink" title="消耗"></a>消耗</h2><ul>
-<li>高CPU</li>
-<li>高内存</li>
-<li>高硬盘</li>
-</ul>
-<h2 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h2><p>ACID主要是针对事务而言的，每一项功能都有与之对应的MySQL设置或特性。</p>
-<h3 id="Atomicity"><a href="#Atomicity" class="headerlink" title="Atomicity"></a>Atomicity</h3><p>事务是不可分割的最小工作单位</p>
-<ul>
-<li>Autocommit setting.</li>
-<li>COMMIT statement.</li>
-<li>ROLLBACK statement.</li>
-<li>Operational data from the INFORMATION_SCHEMA tables.</li>
-</ul>
-<h3 id="Consistency"><a href="#Consistency" class="headerlink" title="Consistency"></a>Consistency</h3><p>事务后不应当出现结构性错误，主要是防Crash</p>
-<ul>
-<li>DoubleWrite Buffer in InnoDB</li>
-<li>Crash recovery in InnoDB</li>
-</ul>
-<h3 id="Isolation"><a href="#Isolation" class="headerlink" title="Isolation"></a>Isolation</h3><p>并发事务隔离</p>
-<ul>
-<li>Autocommit setting.</li>
-<li>SET ISOLATION LEVEL statement.</li>
-<li>The low-level details of InnoDB locking. During performance tuning, you see these details through INFORMATION_SCHEMA tables.</li>
-</ul>
-<h3 id="Durability"><a href="#Durability" class="headerlink" title="Durability"></a>Durability</h3><p>内容提交后将不再修改，实现起来相当麻烦，且于硬件性能关系密切，例如CPU性能，磁盘性能，对于异地部署而言还需要考虑网络性能。</p>
-<ul>
-<li>InnoDB doublewrite buffer, turned on and off by the innodb_doublewrite configuration option.</li>
-<li>Configuration option innodb_flush_log_at_trx_commit.</li>
-<li>Configuration option sync_binlog.</li>
-<li>Configuration option innodb_file_per_table.</li>
-<li>Write buffer in a storage device, such as a disk drive, SSD, or RAID array.</li>
-<li>Battery-backed cache in a storage device.</li>
-<li>The operating system used to run MySQL, in particular its support for the fsync() system call.</li>
-<li>Uninterruptible power supply (UPS) protecting the electrical power to all computer servers and storage devices that run MySQL servers and store MySQL data.</li>
-<li>Your backup strategy, such as frequency and types of backups, and backup retention periods.</li>
-<li>For distributed or hosted data applications, the particular characteristics of the data centers where the hardware for the MySQL servers is located, and network connections between the data centers.</li>
-</ul>
-<h3 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h3><ul>
-<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/innodb-introduction.html</a></li>
-<li><a href="https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>数据库</category>
-      </categories>
-      <tags>
-        <tag>InnoDB</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Flicker</title>
-    <url>/2020/06/21/flicker/</url>
-    <content><![CDATA[<p>明天拍日蚀，先把后期工具准备好<br><a id="more"></a></p>
-<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>去除视频的闪烁，例如</p>
-<ul>
-<li>交流电照明下的频闪</li>
-<li>延时曝光不同导致的亮度突变</li>
-</ul>
-<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>百度云的后期工具文件夹中</p>
-<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><ol>
-<li>把安装得到aex文件放入到pr的plug-ins中即可，绝对不是什么神奇的Common文件夹，别听教程内容瞎说</li>
-</ol>
-]]></content>
-      <categories>
-        <category>PR</category>
-      </categories>
-      <tags>
-        <tag>flicker</tag>
-        <tag>延时</tag>
-        <tag>频闪</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>重新搭建博客编写环境</title>
-    <url>/2020/06/20/restart/</url>
-    <content><![CDATA[<p>太久没写博客了，最近要看一下InnoDB的东西，内容有点多，需要写一点内容，然而家里没有写博客的环境，故写下该指南，留备以后使用<br><a id="more"></a></p>
-<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><h3 id="node-js"><a href="#node-js" class="headerlink" title="node.js"></a>node.js</h3><ol>
-<li><a href="https://nodejs.org/en/" target="_blank" rel="noopener">下载</a>node.js</li>
-<li>一路Next安装</li>
-<li>win10设置里搜索powershell，打开非签名脚本的运行</li>
-</ol>
-<h3 id="Hexo"><a href="#Hexo" class="headerlink" title="Hexo"></a>Hexo</h3><ol>
-<li>找到hexo<a href="https://hexo.io/" target="_blank" rel="noopener">主页</a></li>
-<li>安装</li>
-</ol>
-<h3 id="hexo-deployer-git"><a href="#hexo-deployer-git" class="headerlink" title="hexo-deployer-git"></a>hexo-deployer-git</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-<h3 id="PicGo"><a href="#PicGo" class="headerlink" title="PicGo"></a>PicGo</h3><ol>
-<li>下载并安装<a href="https://github.com/Molunerfinn/PicGo/releases" target="_blank" rel="noopener">PicGO</a>，下载速度是真滴慢，佛了</li>
-<li>配置阿里云OSS</li>
-</ol>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>条目</th>
-<th>内容</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>KeyID</td>
-<td>保密</td>
-</tr>
-<tr>
-<td>KeySecret</td>
-<td>保密</td>
-</tr>
-<tr>
-<td>存储空间名</td>
-<td>githubphoto</td>
-</tr>
-<tr>
-<td>存储区域</td>
-<td>oss-cn-beijing</td>
-</tr>
-<tr>
-<td>存储路径</td>
-<td>img/</td>
-</tr>
-</tbody>
-</table>
-</div>
-<h2 id="下载源项目"><a href="#下载源项目" class="headerlink" title="下载源项目"></a>下载源项目</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone git@github.com:richsoap/RichSoapBlog</span><br></pre></td></tr></table></figure>
-<h2 id="编写内容"><a href="#编写内容" class="headerlink" title="编写内容"></a>编写内容</h2><p>内容在source/_posts下，markdown格式</p>
-<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo server //可以动态调试欸，神奇</span><br></pre></td></tr></table></figure>
-<h2 id="发布"><a href="#发布" class="headerlink" title="发布"></a>发布</h2><h3 id="设定发布路径"><a href="#设定发布路径" class="headerlink" title="设定发布路径"></a>设定发布路径</h3><p>_config.yml文件的末尾改为（应该已经改好了</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:richsoap/richsoap.GitHub.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
-<h3 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo generate</span><br><span class="line">hexo deploy</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>操作指南</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -1390,68 +1453,5 @@
       <categories>
         <category>读书笔记</category>
       </categories>
-  </entry>
-  <entry>
-    <title>枪炮，病菌和钢铁</title>
-    <url>/2019/12/06/guns_germs_and_steel/</url>
-    <content><![CDATA[<p>小学妹论文的读书笔记</p>
-<a id="more"></a>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>什么是聪明<br>聪明是适者生存在不同条件下的反应</p>
-<h2 id="全书结构"><a href="#全书结构" class="headerlink" title="全书结构"></a>全书结构</h2><h3 id="起源"><a href="#起源" class="headerlink" title="起源"></a>起源</h3><ol>
-<li>人类进化与旅行</li>
-<li>岛屿环境的影响</li>
-<li>同时代目击者的描述</li>
-</ol>
-<h3 id="粮食"><a href="#粮食" class="headerlink" title="粮食"></a>粮食</h3><ol>
-<li>农业类型</li>
-<li>农业发展方式</li>
-</ol>
-<h3 id="疾病"><a href="#疾病" class="headerlink" title="疾病"></a>疾病</h3><h3 id="战争"><a href="#战争" class="headerlink" title="战争"></a>战争</h3><h2 id="波利尼西亚群岛"><a href="#波利尼西亚群岛" class="headerlink" title="波利尼西亚群岛"></a>波利尼西亚群岛</h2><h3 id="六种可变因素导致社会发展差异"><a href="#六种可变因素导致社会发展差异" class="headerlink" title="六种可变因素导致社会发展差异"></a>六种可变因素导致社会发展差异</h3><ol>
-<li>岛屿气候</li>
-<li>地质因素</li>
-<li>海洋资源</li>
-<li>面积</li>
-<li>地形</li>
-<li>隔离程度<h3 id="生存与其他因素的关系"><a href="#生存与其他因素的关系" class="headerlink" title="生存与其他因素的关系"></a>生存与其他因素的关系</h3></li>
-</ol>
-<h2 id="粮食-1"><a href="#粮食-1" class="headerlink" title="粮食"></a>粮食</h2><p>粮食带来更多的人口，更多的劳动力，也就才有科学技术/行政体系/军队</p>
-<h3 id="定居"><a href="#定居" class="headerlink" title="定居"></a>定居</h3><p>粮食带来定居</p>
-<ol>
-<li>定居带来更高的人口生育率和抚养率</li>
-<li>定居还带来粮食贮藏，贮藏就需要行政组织等无需进行农作物生产的组织</li>
-<li>农业还能带来大量皮毛/棉花等，帮助人群适应恶劣环境</li>
-<li>更多的人也会带来疾病</li>
-</ol>
-<h3 id="粮食生产的因素"><a href="#粮食生产的因素" class="headerlink" title="粮食生产的因素"></a>粮食生产的因素</h3><ol>
-<li>野生食物来源减少</li>
-<li>可循环野生植物的可能性增加</li>
-<li>粮食生产基于技术，而技术开源积累</li>
-<li>人口和粮食生产的关系<h3 id="植物"><a href="#植物" class="headerlink" title="植物"></a>植物</h3>通过收获这些具有特别可取品质的野生植物，古人(其他动物)在无意识中传播了这些植物，让它们走上驯化之路</li>
-</ol>
-<h4 id="适合驯化的特征"><a href="#适合驯化的特征" class="headerlink" title="适合驯化的特征"></a>适合驯化的特征</h4><ol>
-<li>适合收集的种子</li>
-<li>适合储藏的种子</li>
-<li>繁殖系统</li>
-<li>数量够多</li>
-</ol>
-<h4 id="驯化过程"><a href="#驯化过程" class="headerlink" title="驯化过程"></a>驯化过程</h4><ol>
-<li>本身可以食用的单年生作物</li>
-<li>纤维作物(如果有足够动物皮毛可以跳过)</li>
-<li>多年生作物</li>
-<li>果树<h4 id="驯化的共性"><a href="#驯化的共性" class="headerlink" title="驯化的共性"></a>驯化的共性</h4>淀粉植物占绝对多数，也是最早驯化的植物<h3 id="动物"><a href="#动物" class="headerlink" title="动物"></a>动物</h3>可驯化的动物都是可以驯化的；不可驯化的动物各有各的不可驯化之处</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>亡羊补牢</title>
-    <url>/2019/11/20/init/</url>
-    <content><![CDATA[<a id="more"></a>
-<p>都已经研一老老🐕了，才写出第一篇博客。还是个hexo测试博客，希望能有个好的开始吧。</p>
-<h2 id="图片插入测试"><a href="#图片插入测试" class="headerlink" title="图片插入测试"></a>图片插入测试</h2><p><img src="https://githubphoto.oss-cn-beijing.aliyuncs.com/img/_DSC8937.jpg" alt="小蜥蜴"></p>
-<h2 id="公式编辑测试"><a href="#公式编辑测试" class="headerlink" title="公式编辑测试"></a>公式编辑测试</h2><p>貌似mathjax的cdn有问题的样子，能正常解析，但却加载不出来，难受</p>
-<script type="math/tex; mode=display">\nabla\times\vec{E}=-\frac{\partial\vec{B}}{\partial t}</script>]]></content>
   </entry>
 </search>
