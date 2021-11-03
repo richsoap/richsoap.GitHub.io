@@ -381,6 +381,149 @@
 
 
 
+  <script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script>
+<script>
+	AV.initialize({
+		appId: "7O0VMVnyJY3agelP7oK3YheP-gzGzoHsz",
+		appKey: "i7xdrYvE0xAXFHneDxyQzWaE",
+		serverURL: "https://7o0vmvny.lc-cn-n1-shared.com"
+	});
+
+	function createRecord(Counter, uuid, title) {
+		var newCounter = new Counter();
+		newCounter.set("title", title);
+		newCounter.set("uuid", uuid);
+		newCounter.set("times", 0);
+		newCounter.save(null, {
+			success: function (newCounter) {
+				console.log("create a new counter: title: " + title + ", uuid: " + uuid)
+				var content = $(document.getElementById(uuid)).text() + ": " + newCounter.get("times");
+				$(document.getElementById(uuid).text(content));
+			},
+			error: function (error) {
+				console.log("failed to create new counter: title: " + title + ", uuid: " + uuid);
+			}
+		})
+	}
+
+	function showCount(CounterName) {
+		var Counter = AV.Object.extend(CounterName);
+		var query = new AV.Query(Counter);
+		var uuid_list = [];
+		var uuid_to_url = {};
+		$(".article-count-show").each(function () {
+			var uuid = $(this).attr("uuid").trim();
+			var url = $(this).attr("id").trim();
+			uuid_list.push(uuid)
+			uuid_to_url[uuid] = url
+		});
+		query.containedIn('uuid', uuid_list);
+		query.find({
+			success: function (results) {
+				for (var i = 0; i < results.length; i++) {
+					var uuid = results[i].get("uuid");
+					var times = results[i].get("times")
+					var url = uuid_to_url[uuid]
+					uuid_to_url[uuid] = ""
+					var content = $(document.getElementById(url)).text() + times;
+					$(document.getElementById(url)).text(content);
+					console.log("Get counter: " + uuid + " " + times);
+				}
+			},
+			error: function (object, error) {
+				var content = $(document.getElementById(url)).text() + '0';
+				$(document.getElementById(url)).text(content);
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+		// 处理找不到的counter
+		for (var uuid in uuid_to_url) {
+			var url = uuid_to_url[uuid]
+			if (url !== "") {
+				console.log("not found counter: "+uuid+" "+url)
+				var content = $(document.getElementById(url)).text() + "0";
+				$(document.getElementById(url)).text(content);
+			}
+		}
+	}
+
+	function addOneCount(CounterName, classname) {
+		var Counter = AV.Object.extend(CounterName);
+		var uuid = $(classname).attr('uuid').trim();
+		var url = $(classname).attr("id").trim();
+		var title = $(classname).attr('data-flag-title').trim();
+		console.log("query " + uuid)
+		var query = new AV.Query(Counter);
+		query.equalTo("uuid", uuid);
+		query.find({
+			success: function (results) {
+				if (results.length > 0) {
+					var counter = results[0];
+					counter.fetchWhenSave(true);
+					counter.increment("times");
+					counter.save(null, {
+						success: function () {
+							console.log("add time for uuid: " + uuid + ", title: " + title);
+						},
+						error: function (error) {
+							console.log('Failed to save reader num, with error message: ' + error.message);
+						}
+					});
+				} else {
+					console.log("create " + uuid)
+					createRecord(Counter, uuid, title);
+				}
+			},
+			error: function (error) {
+				console.log('Error:' + error.code + " " + error.message);
+			}
+		});
+	}
+
+	function addPostCount(CounterName) {
+		var uuid = $(".article-count-do").attr('uuid').trim();
+		if (checkHostKey(uuid)) {
+			addOneCount(CounterName, ".article-count-do");
+			addOneCount(CounterName, ".total-read-count-do");
+		}
+	}
+
+	function setCookie(key, value) {
+		var hours = 12;
+		var exp = new Date();
+		exp.setTime(exp.getTime() + hours * 60 * 60 * 1000);
+		cookie = key + "=" + escape(value) + ";expires=" + exp.toGMTString() + ";path=/"
+		document.cookie = cookie;
+		console.log(cookie);
+	}
+
+	function isExistedCookie(key) {
+		return document.cookie.search(key) >= 0
+	}
+
+
+	function checkHostKey(key) {
+		var existed = isExistedCookie(key);
+		console.log("check result: " + existed)
+		setCookie(key, true);
+		return !existed;
+	}
+
+	if ($('.article-count-do').length == 1) {
+		addPostCount("ReadCounter");
+	}
+	if ($('.total-visit-count-do').length == 1) {
+		if (checkHostKey("total-visit")) {
+			addOneCount("ReadCounter", '.total-visit-count-do');
+		}
+	}
+	if ($('.article-count-show').length > 0) {
+		showCount("ReadCounter");
+	}
+
+</script>
+
+
 
   
 <script src="/js/tocbot.min.js"></script>
@@ -401,8 +544,25 @@
 
 
 
-<script src="/js/ocean.js"></script>
+<script src="/js/ocean.js"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script><!-- hexo-inject:begin --><!-- hexo-inject:end --></body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/assets/hijiki.model.json"},"display":{"superSample":2,"position":"right","width":200,"height":400,"hOffset":0,"vOffset":-20},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
 </html>
