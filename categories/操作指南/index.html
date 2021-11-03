@@ -203,7 +203,8 @@
 
 
 
-  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <!-- <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script> -->
+<script src="./node_modules/leancloud-storage/dist/av-min.js"></script>
 <script>AV.initialize("7O0VMVnyJY3agelP7oK3YheP-gzGzoHsz", "i7xdrYvE0xAXFHneDxyQzWaE");</script>
 <script>
 
@@ -227,30 +228,38 @@ function createRecord(Counter, uuid, title) {
 function showCount(CounterName) {
 	var Counter = AV.Object.extend(CounterName);
 	var query = new AV.Query(Counter);
+	var uuid_list = [];
+	var uuid_to_url = {};
 	$(".article-count-show").each(function() {
 		var uuid = $(this).attr("uuid").trim();
 		var url = $(this).attr("id").trim();
-		query.equalTo("uuid", uuid);
-		query.find({
-			success: function(results) {
-				if (results.length == 0) {
-					var content = $(document.getElementById(url)).text() + '0';
-					$(document.getElementById(url)).text(content);
-				}
-				for (var i = 0; i < results.length; i++) {
-					var object = results[i];
-					var content = $(document.getElementById(url)).text() + object.get('times');
-					$(document.getElementById(url)).text(content);
-				}
-			},
-			error: function(object, error) {
-				var content = $(document.getElementById(url)).text() + '0';
-				$(document.getElementById(url)).text(content);
-				console.log("Error: " + error.code + " " + error.message);
-			}
-		});
-
+		uuid_list.push(uuid)
+		uuid_to_url[uuid] = url
 	});
+	query.containedIn('uuid', uuid_list);
+	query.find({
+		success: function(results) {
+			for(var i = 0;i < results.length;i ++) {
+				var object = results[i];
+				var url = uuid_to_url[object.get("uuid")]
+				uuid_to_url = ""
+				var content = $(document.getElementById(url)).text() + object.get('times');
+				$(document.getElementById(url)).text(content);
+			}
+		},
+		error: function(object, error) {
+			var content = $(document.getElementById(url)).text() + '0';
+			$(document.getElementById(url)).text(content);
+			console.log("Error: " + error.code + " " + error.message);
+		}
+	});
+	// 处理找不到的counter
+	for(let url of uuid_to_url.values()){
+		if(url != "") {
+			var content = $(document.getElementById(url)).text() + object.get('times');
+			$(document.getElementById(url)).text(content);
+		}
+	}
 }
 
 function addOneCount(CounterName, classname) {
